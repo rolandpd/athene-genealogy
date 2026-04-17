@@ -161,12 +161,14 @@ export class NewEntityModal extends Modal {
 		}
 
 		// Set ID property — re-fetch file first because Templater may have moved it.
-		// Using the stale TFile reference after a move would cause processFrontMatter
-		// to create a new empty file at the original path instead of updating the moved file.
+		// processFrontMatter must run after Templater has flushed content to disk.
+		// Templater uses a debounced editor save, so write_template_to_file may return
+		// before the vault file actually has content. We wait for the vault modify event.
 		if (this.config.idProperty) {
 			const prop = this.config.idProperty;
 			const currentFile = this.resolveFileAfterTemplate(file, filePath);
 			if (currentFile) {
+				await this.waitForTemplaterWrite(currentFile);
 				await this.app.fileManager.processFrontMatter(currentFile, (fm: Record<string, unknown>) => {
 					fm[prop] = id;
 				});
@@ -182,6 +184,27 @@ export class NewEntityModal extends Modal {
 	// Obsidian updates TFile.path in-place when a file moves, so file.path is checked
 	// first. The original filePath is a fallback for the case where the update hasn't
 	// propagated yet.
+	// Templater's editor-branch save is debounced: write_template_to_file returns before
+	// the vault file has content. We poll the vault until the file is non-empty or until
+	// the next vault modify event, with a 5-second timeout as safety net.
+	private waitForTemplaterWrite(file: TFile): Promise<void> {
+		return new Promise<void>(resolve => {
+			// If content is already there (non-editor path or fast save), resolve immediately.
+			void this.app.vault.read(file).then(content => {
+				if (content.trim()) { resolve(); return; }
+
+				const timer = setTimeout(resolve, 5000);
+				const ref = this.app.vault.on('modify', (modified) => {
+					if (modified.path === file.path) {
+						clearTimeout(timer);
+						this.app.vault.offref(ref);
+						resolve();
+					}
+				});
+			});
+		});
+	}
+
 	private resolveFileAfterTemplate(file: TFile, originalPath: string): TFile | null {
 		const byCurrentPath = this.app.vault.getAbstractFileByPath(file.path);
 		if (byCurrentPath instanceof TFile) return byCurrentPath;
