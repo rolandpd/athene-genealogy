@@ -1,6 +1,10 @@
 # Athene Genealogy
 
-An [Obsidian](https://obsidian.md) plugin for managing genealogical data. It provides an ID registry, a file creation modal with [Templater](https://github.com/SilentVoid13/Templater) integration, and EDTF-based date handling.
+An [Obsidian](https://obsidian.md) plugin for structured genealogical research. It provides an ID registry for assigning stable identifiers to persons, events, and sources; a file creation modal with [Templater](https://github.com/SilentVoid13/Templater) integration; and EDTF-based date handling for precise historical dates including approximations and ranges.
+
+The plugin is designed around the idea that **events are the primary information currency** — persons, places, and sources are linked through structured event records. It supports research workflows where every piece of information should be traceable to a primary source.
+
+> **Status:** Early release (v0.9.x). Core features are working and in daily use. The API and settings format may still change before v1.0.
 
 ## Features
 
@@ -15,7 +19,7 @@ Automatically assigns unique IDs based on configurable masks (e.g. `I####` → `
 
 ### File Creation Modal
 
-Invoke **"Neu: Person"** (or any configured type) from the command palette:
+Invoke **"New: Person"** (or any configured type) from the command palette:
 
 - Filename pre-filled with the next ID — type the name in front of it
 - If the ID is removed from the filename and no frontmatter property is configured, an inline warning appears with a reset link
@@ -55,17 +59,30 @@ The **ID Registry** section provides a **Rebuild** button to rescan the vault an
 
 ## Installation
 
-### Manual (current)
+### Via BRAT
 
-Copy `main.js`, `manifest.json`, and `styles.css` to `<vault>/.obsidian/plugins/athene-genealogy/`.
+Install [BRAT](https://github.com/TfTHacker/obsidian42-brat), then add `rolandpd/athene-genealogy` as a beta plugin.
 
-### Via BRAT (beta)
+### Manual
 
-Once available on BRAT, add `rolandpd/athene-genealogy` as a beta plugin.
+Download `main.js`, `manifest.json`, and `styles.css` from the [latest release](https://github.com/rolandpd/athene-genealogy/releases/latest) and copy them to `<vault>/.obsidian/plugins/athene-genealogy/`.
 
 ## Recommended: Templater
 
 While the plugin works without Templater, it is strongly recommended. Templates are applied using Templater's API when available, which means all `tp.*` variables work as usual.
+
+## Roadmap
+
+Planned for future releases:
+
+- **i18n** — UI translations (DE, EN, FR, IT, ES, PL)
+- **FileFactory** — programmatic file creation for persons, events, and sources
+- **GEDCOM export** — export vault data to GEDCOM 5.5.1 and GEDCOM 7
+- **Obsidian plugin directory** — submission once the API stabilises
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
