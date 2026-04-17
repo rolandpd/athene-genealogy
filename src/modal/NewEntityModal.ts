@@ -160,15 +160,36 @@ export class NewEntityModal extends Modal {
 			await this.applyTemplate(file, this.selectedTemplate);
 		}
 
-		// Set ID property after template so it overrides any placeholder
+		// Set ID property — re-fetch file first because Templater may have moved it.
+		// Using the stale TFile reference after a move would cause processFrontMatter
+		// to create a new empty file at the original path instead of updating the moved file.
 		if (this.config.idProperty) {
 			const prop = this.config.idProperty;
-			await this.app.fileManager.processFrontMatter(file, (fm: Record<string, unknown>) => {
-				fm[prop] = id;
-			});
+			const currentFile = this.resolveFileAfterTemplate(file, filePath);
+			if (currentFile) {
+				await this.app.fileManager.processFrontMatter(currentFile, (fm: Record<string, unknown>) => {
+					fm[prop] = id;
+				});
+			} else {
+				new Notice(`ID property not set — could not locate file after template was applied (moved to unknown location?).`);
+			}
 		}
 
 		new Notice(`${this.config.name} created: ${finalFilename}`);
+	}
+
+	// After applyTemplate, Templater may have moved the file via tp.file.move().
+	// Obsidian updates TFile.path in-place when a file moves, so file.path is checked
+	// first. The original filePath is a fallback for the case where the update hasn't
+	// propagated yet.
+	private resolveFileAfterTemplate(file: TFile, originalPath: string): TFile | null {
+		const byCurrentPath = this.app.vault.getAbstractFileByPath(file.path);
+		if (byCurrentPath instanceof TFile) return byCurrentPath;
+
+		const byOriginalPath = this.app.vault.getAbstractFileByPath(originalPath);
+		if (byOriginalPath instanceof TFile) return byOriginalPath;
+
+		return null;
 	}
 
 	private async applyTemplate(file: TFile, templatePath: string) {
