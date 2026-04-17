@@ -1,90 +1,72 @@
-# Obsidian Sample Plugin
+# Athene Genealogy
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+An [Obsidian](https://obsidian.md) plugin for managing genealogical data. It provides an ID registry, a file creation modal with [Templater](https://github.com/SilentVoid13/Templater) integration, and EDTF-based date handling.
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+## Features
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open modal (simple)" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+### ID Registry
 
-## First time developing plugins?
+Automatically assigns unique IDs based on configurable masks (e.g. `I####` → `I0042`). The highest issued ID per mask is cached so new IDs are instant — no vault scan required on every creation.
 
-Quick starting guide for new plugin devs:
+- Mask-based format: prefix letters followed by `#` placeholders (e.g. `I####`, `E#####`, `T#####`)
+- Overflow-safe: `I####` with number 10000 produces `I10000`
+- Optional frontmatter property: ID can be stored in a property (e.g. `id`) instead of or in addition to the filename
+- **Rebuild** command rescans all filenames and frontmatter to resync the cache
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+### File Creation Modal
 
-## Releasing new releases
+Invoke **"Neu: Person"** (or any configured type) from the command palette:
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+- Filename pre-filled with the next ID — type the name in front of it
+- If the ID is removed from the filename and no frontmatter property is configured, an inline warning appears with a reset link
+- Template selector (dropdown if multiple templates are configured per type)
+- Templater integration: applies the template via Templater's `write_template_to_file` API if Templater is installed; falls back to plain content copy
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+### EDTF Date Handling
 
-## Adding your plugin to the community plugin list
+`AtheneDate` parses [EDTF](https://www.loc.gov/standards/datetime/) date strings and converts them to:
 
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+- German display format (`23. Juni 1897`, `ca. 1897`, `vor 1897`)
+- GEDCOM 5.5.1 (`ABT 23 JUN 1897`, `BEF 1897`)
+- GEDCOM 7 (near 1:1 EDTF)
+- Sort keys for correct chronological ordering
 
-## How to use
+The API is exposed on `window.athene` for use in Dataview JS blocks — no imports needed.
 
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
-
-## Manually installing the plugin
-
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
-
-## Improve code quality with eslint
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- This project already has eslint preconfigured, you can invoke a check by running`npm run lint`
-- Together with a custom eslint [plugin](https://github.com/obsidianmd/eslint-plugin) for Obsidan specific code guidelines.
-- A GitHub action is preconfigured to automatically lint every commit on all branches.
-
-## Funding URL
-
-You can include funding URLs where people who use your plugin can financially support it.
-
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
-
-```json
-{
-    "fundingUrl": "https://buymeacoffee.com"
-}
+```js
+// In a Dataview JS block:
+const d = window.athene.parseDate("1897~");
+dv.paragraph(d.toDisplay()); // "ca. 1897"
 ```
 
-If you have multiple URLs, you can also do:
+## Settings
 
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
-    }
-}
-```
+Each ID type can be configured with:
 
-## API Documentation
+| Field | Description |
+|---|---|
+| Name | Display name used in the command palette, e.g. "Person" |
+| Mask | ID format, e.g. `I####` |
+| Target folder | Vault folder where new files are created |
+| ID property | Optional frontmatter property to store the ID (e.g. `id`) |
+| Templates | One or more Templater template files |
 
-See https://docs.obsidian.md
+The **ID Registry** section provides a **Rebuild** button to rescan the vault and resync the ID cache.
+
+## Installation
+
+### Manual (current)
+
+Copy `main.js`, `manifest.json`, and `styles.css` to `<vault>/.obsidian/plugins/athene-genealogy/`.
+
+### Via BRAT (beta)
+
+Once available on BRAT, add `rolandpd/athene-genealogy` as a beta plugin.
+
+## Recommended: Templater
+
+While the plugin works without Templater, it is strongly recommended. Templates are applied using Templater's API when available, which means all `tp.*` variables work as usual.
+
+## License
+
+MIT — see [LICENSE](LICENSE).

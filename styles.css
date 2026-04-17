@@ -1,8 +1,51 @@
-/*
+/* ── ID-Typ-Einträge in den Settings ───────────────────────────────────────── */
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+.athene-id-type {
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	padding: 8px 12px;
+	margin-bottom: 12px;
+}
 
-If your plugin does not need CSS, delete this file.
+.athene-id-type .setting-item.is-heading {
+	border-bottom: 1px solid var(--background-modifier-border);
+	margin-bottom: 4px;
+	padding-bottom: 6px;
+}
 
-*/
+/* Template-Liste */
+
+.athene-templates-label {
+	margin: 8px 0 2px 0;
+	font-size: var(--font-ui-small);
+	font-weight: var(--font-semibold);
+	color: var(--text-muted);
+}
+
+.athene-templates-list .setting-item {
+	padding: 4px 0;
+	border: none;
+}
+
+.athene-templates-list .setting-item-control input[type="text"] {
+	width: 100%;
+	min-width: 260px;
+}
+
+/* ── Inline-Warnung im NewEntityModal ───────────────────────────────────────── */
+
+.athene-id-warning {
+	margin: -8px 0 8px 0;
+	padding: 6px 10px;
+	border-radius: 4px;
+	background-color: var(--background-modifier-warning);
+	color: var(--text-warning);
+	font-size: var(--font-ui-small);
+}
+
+.athene-id-warning a {
+	color: var(--text-warning);
+	font-weight: var(--font-semibold);
+	text-decoration: underline;
+	cursor: pointer;
+}

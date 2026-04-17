@@ -1,99 +1,87 @@
-import {App, Editor, MarkdownView, Modal, Notice, Plugin} from 'obsidian';
-import {DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab} from "./settings";
+import { Plugin } from 'obsidian';
+import { AtheneDate, type DateQualifier } from './date';
+import { AtheneGenealogySettingTab, DEFAULT_SETTINGS } from './settings';
+import type { AthenePluginSettings } from './types';
+import { IdRegistry } from './registry/IdRegistry';
+import { NewEntityModal } from './modal/NewEntityModal';
+import { TypePickerModal } from './modal/TypePickerModal';
 
-// Remember to rename these classes and interfaces!
+/** Public API exposed on window.athene — usable from DataView JS blocks. */
+export interface AtheneApi {
+	/** Parse an EDTF string into an AtheneDate. Returns null for invalid input. */
+	parseDate(str: string, qualifiers?: DateQualifier[]): AtheneDate | null;
+	AtheneDate: typeof AtheneDate;
+}
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+declare global {
+	interface Window {
+		athene?: AtheneApi;
+	}
+}
+
+export default class AtheneGenealogyPlugin extends Plugin {
+	settings!: AthenePluginSettings;
+	registry!: IdRegistry;
 
 	async onload() {
 		await this.loadSettings();
 
-		// This creates an icon in the left ribbon.
-		this.addRibbonIcon('dice', 'Sample', (evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
-		});
+		this.registry = new IdRegistry(this);
 
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status bar text');
+		// Expose AtheneDate API globally so DataView JS blocks can use it without importing
+		window.athene = {
+			parseDate: (str, qualifiers) => AtheneDate.parse(str, qualifiers),
+			AtheneDate,
+		};
 
-		// This adds a simple command that can be triggered anywhere
+		// Immer verfügbarer Einstiegspunkt: öffnet Typ-Auswahl oder direkt das Modal
 		this.addCommand({
-			id: 'open-modal-simple',
-			name: 'Open modal (simple)',
+			id: 'new-entity',
+			name: 'Neu: Datei anlegen …',
 			callback: () => {
-				new SampleModal(this.app).open();
-			}
-		});
-		// This adds an editor command that can perform some operation on the current editor instance
-		this.addCommand({
-			id: 'replace-selected',
-			name: 'Replace selected content',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				editor.replaceSelection('Sample editor command');
-			}
-		});
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		this.addCommand({
-			id: 'open-modal-complex',
-			name: 'Open modal (complex)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
-
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
+				const types = this.settings.idTypes;
+				if (types.length === 0) return;
+				if (types.length === 1) {
+					new NewEntityModal(this.app, this.registry, types[0]!).open();
+				} else {
+					new TypePickerModal(this.app, this.registry, types).open();
 				}
-				return false;
-			}
+			},
 		});
 
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
+		this.registerIdCommands();
 
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			new Notice("Click");
-		});
-
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
-
+		this.addSettingTab(new AtheneGenealogySettingTab(this.app, this));
 	}
 
 	onunload() {
+		delete window.athene;
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData() as Partial<MyPluginSettings>);
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData() as Partial<AthenePluginSettings>);
 	}
 
 	async saveSettings() {
 		await this.saveData(this.settings);
-	}
-}
-
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
+		// Neu konfigurierte Typen sofort in der Palette verfügbar machen
+		this.registerIdCommands();
 	}
 
-	onOpen() {
-		let {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
-
-	onClose() {
-		const {contentEl} = this;
-		contentEl.empty();
+	/**
+	 * Registriert pro konfiguriertem ID-Typ einen Command „Neu: <Name>".
+	 * addCommand() ist idempotent bei gleicher ID — kein Reload nötig.
+	 */
+	registerIdCommands() {
+		for (const idType of this.settings.idTypes) {
+			this.addCommand({
+				id: `new-${idType.id}`,
+				name: `Neu: ${idType.name}`,
+				callback: () => {
+					const current = this.settings.idTypes.find(t => t.id === idType.id);
+					if (current) new NewEntityModal(this.app, this.registry, current).open();
+				},
+			});
+		}
 	}
 }
