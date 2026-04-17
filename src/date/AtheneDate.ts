@@ -80,11 +80,11 @@ export class AtheneDate {
       const qualifiers = new Set<DateQualifier>(extraQualifiers);
 
       if (parsed.type === 'Date') {
-        const d = parsed as EdtfDate;
+        const d = parsed;
         if (d.approximate.value !== 0) qualifiers.add('APPROXIMATE');
         if (d.uncertain.value !== 0)   qualifiers.add('UNCERTAIN');
       } else {
-        const iv = parsed as EdtfInterval;
+        const iv = parsed;
         if (!isEdtfDate(iv.lower)) qualifiers.add('BEFORE');  // ../X → lower is Infinity
         if (!isEdtfDate(iv.upper)) qualifiers.add('AFTER');   // X/.. → upper is Infinity
       }
@@ -136,13 +136,13 @@ export class AtheneDate {
 
   private anchorDate(): EdtfDate | null {
     if (this.parsed.type === 'Interval') {
-      const iv = this.parsed as EdtfInterval;
+      const iv = this.parsed;
       // BEFORE (../X): upper is bounded; AFTER (X/..): lower is bounded; range: prefer lower
       const lower = isEdtfDate(iv.lower) ? iv.lower : null;
       const upper = isEdtfDate(iv.upper) ? iv.upper : null;
       return upper ?? lower;
     }
-    return this.parsed as EdtfDate;
+    return this.parsed;
   }
 
   private isoPrecisionLength(): number {
@@ -197,7 +197,7 @@ export class AtheneDate {
   /** German display string: "23. Juni 1897", "ca. 1897", "vor 1897", "nach 1897" */
   toDisplay(): string {
     if (this.parsed.type === 'Interval') {
-      const iv = this.parsed as EdtfInterval;
+      const iv = this.parsed;
       const lower = isEdtfDate(iv.lower) ? iv.lower : null;
       const upper = isEdtfDate(iv.upper) ? iv.upper : null;
       if (!lower && upper)  return `vor ${this.formatDate(upper)}`;
@@ -206,7 +206,7 @@ export class AtheneDate {
       return this.rawString;
     }
 
-    const d = this.parsed as EdtfDate;
+    const d = this.parsed;
     const prefix = this.hasQualifier('APPROXIMATE') ? 'ca. ' :
                    this.hasQualifier('CALCULATED')  ? 'ber. ' :
                    this.hasQualifier('ESTIMATED')   ? 'gesch. ' : '';
@@ -235,7 +235,7 @@ export class AtheneDate {
   /** GEDCOM 5.5.1 date phrase. */
   toGedcom55(): string {
     if (this.parsed.type === 'Interval') {
-      const iv = this.parsed as EdtfInterval;
+      const iv = this.parsed;
       const lower = isEdtfDate(iv.lower) ? iv.lower : null;
       const upper = isEdtfDate(iv.upper) ? iv.upper : null;
       if (!lower && upper) return `BEF ${this.gedcomDate55(upper)}`;

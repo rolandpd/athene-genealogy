@@ -32,7 +32,13 @@
 	min-width: 260px;
 }
 
-/* ── Inline-Warnung im NewEntityModal ───────────────────────────────────────── */
+/* ── NewEntityModal ─────────────────────────────────────────────────────────── */
+
+.athene-filename-input {
+	width: 100%;
+}
+
+/* Inline warning */
 
 .athene-id-warning {
 	margin: -8px 0 8px 0;

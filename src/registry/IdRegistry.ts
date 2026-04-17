@@ -71,8 +71,9 @@ export class IdRegistry {
 
 			// Frontmatter-Property bevorzugt, wenn idProperty konfiguriert ist
 			if (config.idProperty) {
-				const fm = this.host.app.metadataCache.getFileCache(file)?.frontmatter;
-				const val = fm?.[config.idProperty];
+				const cache = this.host.app.metadataCache.getFileCache(file);
+				const fm = cache?.frontmatter as Record<string, unknown> | undefined;
+				const val: unknown = fm?.[config.idProperty];
 				if (typeof val === 'string') {
 					const m = val.match(propPattern);
 					if (m?.[1]) num = parseInt(m[1], 10);

@@ -37,7 +37,7 @@ export default class AtheneGenealogyPlugin extends Plugin {
 		// Immer verfügbarer Einstiegspunkt: öffnet Typ-Auswahl oder direkt das Modal
 		this.addCommand({
 			id: 'new-entity',
-			name: 'Neu: Datei anlegen …',
+			name: 'New: create file...',
 			callback: () => {
 				const types = this.settings.idTypes;
 				if (types.length === 0) return;
@@ -69,8 +69,8 @@ export default class AtheneGenealogyPlugin extends Plugin {
 	}
 
 	/**
-	 * Registriert pro konfiguriertem ID-Typ einen Command „Neu: <Name>".
-	 * addCommand() ist idempotent bei gleicher ID — kein Reload nötig.
+	 * Registers one command per configured ID type.
+	 * addCommand() is idempotent for a given ID — no plugin reload needed.
 	 */
 	registerIdCommands() {
 		for (const idType of this.settings.idTypes) {

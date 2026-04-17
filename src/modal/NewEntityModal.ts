@@ -2,6 +2,17 @@ import { App, Modal, Notice, Setting, TFile, TextComponent, normalizePath } from
 import type { IdRegistry } from '../registry/IdRegistry';
 import type { IdTypeConfig } from '../types';
 
+// Minimal interface for the Templater plugin API we use
+interface TemplaterAPI {
+	write_template_to_file(template: TFile, file: TFile): Promise<void>;
+}
+interface TemplaterPlugin {
+	templater?: TemplaterAPI;
+}
+interface AppWithPlugins extends App {
+	plugins?: { plugins?: Record<string, TemplaterPlugin | undefined> };
+}
+
 export class NewEntityModal extends Modal {
 	private filename = '';
 	private selectedTemplate = '';
@@ -20,35 +31,35 @@ export class NewEntityModal extends Modal {
 	async onOpen() {
 		const { contentEl } = this;
 		contentEl.empty();
-		this.titleEl.setText(`Neu: ${this.config.name}`);
+		this.titleEl.setText(`New: ${this.config.name}`);
 
-		// Nächste ID vorausschauen (kein Inkrement)
+		// Peek next ID without incrementing the cache
 		this.previewId = await this.registry.peekNextId(this.config);
 		this.filename = this.previewId;
 		this.selectedTemplate = this.config.templates[0] ?? '';
 
-		// Dateiname-Feld
+		// Filename field
 		new Setting(contentEl)
-			.setName('Dateiname')
-			.setDesc('ID bereits eingetragen — Namen voranstellen, z.B. "Mustermann, Emil ' + this.previewId + '"')
+			.setName('Filename')
+			.setDesc('ID pre-filled — type the name in front, e.g. "Mustermann, Emil ' + this.previewId + '"')
 			.addText(text => {
 				this.textComp = text;
 				text.setValue(this.filename).onChange(val => {
 					this.filename = val.trim();
 					this.updateWarning();
 				});
-				text.inputEl.style.width = '100%';
+				text.inputEl.addClass('athene-filename-input');
 				setTimeout(() => {
 					text.inputEl.focus();
 					text.inputEl.setSelectionRange(0, 0);
 				}, 50);
 			});
 
-		// Inline-Warnung (zunächst versteckt)
+		// Inline warning (hidden initially)
 		this.warningEl = contentEl.createDiv({ cls: 'athene-id-warning' });
 		this.warningEl.hide();
 
-		// Template-Auswahl
+		// Template selector
 		if (this.config.templates.length > 1) {
 			new Setting(contentEl)
 				.setName('Template')
@@ -68,19 +79,19 @@ export class NewEntityModal extends Modal {
 		// Buttons
 		new Setting(contentEl)
 			.addButton(btn => btn
-				.setButtonText('Abbrechen')
+				.setButtonText('Cancel')
 				.onClick(() => this.close()))
 			.addButton(btn => btn
-				.setButtonText('Anlegen')
+				.setButtonText('Create')
 				.setCta()
-				.onClick(() => this.create()));
+				.onClick(() => { void this.create(); }));
 	}
 
 	onClose() {
 		this.contentEl.empty();
 	}
 
-	// ── Privat ──────────────────────────────────────────────────────────────
+	// ── Private ──────────────────────────────────────────────────────────────
 
 	private updateWarning() {
 		if (!this.warningEl) return;
@@ -90,9 +101,9 @@ export class NewEntityModal extends Modal {
 		if (idMissing && !hasProperty) {
 			this.warningEl.empty();
 			this.warningEl.createSpan({
-				text: `ID ${this.previewId} nicht im Dateinamen — wird beim Anlegen erneut vergeben. `,
+				text: `ID ${this.previewId} is not in the filename — it will be reassigned. `,
 			});
-			const link = this.warningEl.createEl('a', { text: 'Zurücksetzen' });
+			const link = this.warningEl.createEl('a', { text: 'Reset' });
 			link.addEventListener('click', () => {
 				this.filename = this.previewId;
 				this.textComp?.setValue(this.previewId);
@@ -106,28 +117,28 @@ export class NewEntityModal extends Modal {
 
 	private async create() {
 		if (!this.filename && !this.config.idProperty) {
-			new Notice('Bitte einen Dateinamen eingeben.');
+			new Notice('Please enter a filename.');
 			return;
 		}
 
-		// ID committen (Cache inkrementieren)
+		// Commit ID (increment cache)
 		const id = await this.registry.commitNextId(this.config);
 
-		// Fallback-Dateiname: nur ID wenn Feld leer gelassen
+		// Fallback filename: use ID only if field was cleared
 		const finalFilename = this.filename || id;
 
-		// Zielordner sicherstellen
+		// Ensure target folder exists
 		const folder = normalizePath(this.config.folder);
 		if (folder && !this.app.vault.getAbstractFileByPath(folder)) {
 			await this.app.vault.createFolder(folder);
 		}
 
-		// Datei anlegen
+		// Create file
 		const filePath = normalizePath(
 			folder ? `${folder}/${finalFilename}.md` : `${finalFilename}.md`
 		);
 		if (this.app.vault.getAbstractFileByPath(filePath)) {
-			new Notice(`Datei existiert bereits: ${filePath}`);
+			new Notice(`File already exists: ${filePath}`);
 			return;
 		}
 
@@ -135,47 +146,47 @@ export class NewEntityModal extends Modal {
 		try {
 			file = await this.app.vault.create(filePath, '');
 		} catch {
-			new Notice(`Fehler beim Anlegen: ${filePath}`);
+			new Notice(`Error creating file: ${filePath}`);
 			return;
 		}
 
-		// Modal schließen und Datei öffnen — Templater braucht die Datei als aktiven View
+		// Close modal and open file — Templater needs the file as the active view
 		this.close();
 		const leaf = this.app.workspace.getLeaf(false);
 		await leaf.openFile(file);
 
-		// Template anwenden (Datei ist jetzt aktiver View)
+		// Apply template (file is now the active view)
 		if (this.selectedTemplate) {
 			await this.applyTemplate(file, this.selectedTemplate);
 		}
 
-		// ID-Property setzen/überschreiben (nach Template, damit Platzhalter überschrieben werden)
+		// Set ID property after template so it overrides any placeholder
 		if (this.config.idProperty) {
 			const prop = this.config.idProperty;
-			await this.app.fileManager.processFrontMatter(file, fm => {
+			await this.app.fileManager.processFrontMatter(file, (fm: Record<string, unknown>) => {
 				fm[prop] = id;
 			});
 		}
 
-		new Notice(`${this.config.name} angelegt: ${finalFilename}`);
+		new Notice(`${this.config.name} created: ${finalFilename}`);
 	}
 
 	private async applyTemplate(file: TFile, templatePath: string) {
 		const tplFile = this.app.vault.getAbstractFileByPath(normalizePath(templatePath));
 		if (!(tplFile instanceof TFile)) {
-			new Notice(`Template nicht gefunden: ${templatePath}`);
+			new Notice(`Template not found: ${templatePath}`);
 			return;
 		}
 
-		// Templater bevorzugen, falls installiert (braucht Datei als aktiven View)
-		const plugins = (this.app as any).plugins?.plugins as Record<string, any> | undefined;
-		const templater = plugins?.['templater-obsidian']?.templater;
+		// Use Templater if installed (requires file to be the active view)
+		const appPlugins = (this.app as AppWithPlugins).plugins?.plugins;
+		const templater = appPlugins?.['templater-obsidian']?.templater;
 		if (templater?.write_template_to_file) {
 			await templater.write_template_to_file(tplFile, file);
 			return;
 		}
 
-		// Fallback: Template-Inhalt unverändert einfügen
+		// Fallback: insert template content verbatim
 		const content = await this.app.vault.read(tplFile);
 		await this.app.vault.modify(file, content);
 	}

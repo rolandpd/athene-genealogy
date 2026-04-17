@@ -16,23 +16,22 @@ export class AtheneGenealogySettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		// ── Allgemein ──────────────────────────────────────────────────────
+		// ── General ────────────────────────────────────────────────────────
 		new Setting(containerEl)
-			.setName('Anzeigesprache')
-			.setDesc('Sprachcode für Datumsformatierung (z.B. "de")')
+			.setName('Display language')
+			.setDesc('Language code for date formatting (e.g. "de")')
 			.addText(text => text
-				.setPlaceholder('de')
+				.setPlaceholder('Language code')
 				.setValue(this.plugin.settings.locale)
 				.onChange(async val => {
 					this.plugin.settings.locale = val.trim() || 'de';
 					await this.plugin.saveSettings();
 				}));
 
-		// ── ID-Typen ───────────────────────────────────────────────────────
-		containerEl.createEl('h2', { text: 'ID-Typen' });
+		// ── ID types ───────────────────────────────────────────────────────
+		new Setting(containerEl).setName('ID types').setHeading();
 		containerEl.createEl('p', {
-			text: 'Jeder Eintrag erzeugt einen Command „Neu: <Name>" in der Command-Palette. '
-				+ 'Neue Typen sind sofort verfügbar (kein Plugin-Reload nötig).',
+			text: 'Each entry creates a command in the command palette. New types are available immediately.',
 			cls: 'setting-item-description',
 		});
 
@@ -42,11 +41,11 @@ export class AtheneGenealogySettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.addButton(btn => btn
-				.setButtonText('+ ID-Typ hinzufügen')
+				.setButtonText('Add ID type')
 				.onClick(async () => {
 					this.plugin.settings.idTypes.push({
 						id: crypto.randomUUID(),
-						name: 'Neu',
+						name: 'New',
 						mask: 'I####',
 						folder: '',
 						templates: [],
@@ -55,22 +54,21 @@ export class AtheneGenealogySettingTab extends PluginSettingTab {
 					this.display();
 				}));
 
-		// ── ID-Registry ────────────────────────────────────────────────────
-		containerEl.createEl('h2', { text: 'ID-Registry' });
+		// ── ID registry ────────────────────────────────────────────────────
+		new Setting(containerEl).setName('ID registry').setHeading();
 
 		new Setting(containerEl)
-			.setName('Index neu aufbauen')
-			.setDesc('Vault nach vorhandenen IDs durchsuchen und Cache aktualisieren. '
-				+ 'Nötig nach manuell angelegten Dateien.')
+			.setName('Rebuild index')
+			.setDesc('Scan vault for existing ids and update the cache — run this after creating files manually.')
 			.addButton(btn => btn
 				.setButtonText('Rebuild')
 				.onClick(async () => {
 					await this.plugin.registry?.rebuildAll();
-					new Notice('ID-Index neu aufgebaut.');
+					new Notice('ID index rebuilt.');
 				}));
 	}
 
-	// ── Einzelner ID-Typ ──────────────────────────────────────────────────
+	// ── Single ID type ────────────────────────────────────────────────────
 
 	private renderIdType(containerEl: HTMLElement, index: number) {
 		const type = this.plugin.settings.idTypes[index];
@@ -78,11 +76,11 @@ export class AtheneGenealogySettingTab extends PluginSettingTab {
 		const div = containerEl.createDiv({ cls: 'athene-id-type' });
 
 		new Setting(div)
-			.setName(type.name || '(unbenannt)')
+			.setName(type.name || '(unnamed)')
 			.setHeading()
 			.addButton(btn => btn
 				.setIcon('trash')
-				.setTooltip('Entfernen')
+				.setTooltip('Remove')
 				.setWarning()
 				.onClick(async () => {
 					const { prefix } = parseMask(type.mask);
@@ -94,7 +92,7 @@ export class AtheneGenealogySettingTab extends PluginSettingTab {
 
 		new Setting(div)
 			.setName('Name')
-			.setDesc('Anzeigename, z.B. „Person" oder „Ereignis"')
+			.setDesc('Display name, e.g. "person" or "event"')
 			.addText(text => text
 				.setValue(type.name)
 				.onChange(async val => {
@@ -103,8 +101,8 @@ export class AtheneGenealogySettingTab extends PluginSettingTab {
 				}));
 
 		new Setting(div)
-			.setName('Maske')
-			.setDesc('Präfix + "#" als Platzhalter für Ziffern. Beispiel: "I####" → I0042, Overflow: I10000')
+			.setName('Mask')
+			.setDesc('Prefix followed by "#" digit placeholders — e.g. "p####" creates p0001, p0002 …')
 			.addText(text => text
 				.setValue(type.mask)
 				.setPlaceholder('I####')
@@ -113,16 +111,16 @@ export class AtheneGenealogySettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 
-		// Zielordner mit Typeahead
+		// Target folder with typeahead
 		new Setting(div)
-			.setName('Zielordner')
-			.setDesc('Ordner für neue Dateien')
+			.setName('Target folder')
+			.setDesc('Folder for new files')
 			.addText(text => {
 				text.setValue(type.folder).setPlaceholder('Personen');
-				new FolderSuggest(this.app, text.inputEl, async val => {
+				new FolderSuggest(this.app, text.inputEl, val => {
 					type.folder = val;
 					text.setValue(val);
-					await this.plugin.saveSettings();
+					void this.plugin.saveSettings();
 				});
 				text.onChange(async val => {
 					type.folder = val;
@@ -131,11 +129,11 @@ export class AtheneGenealogySettingTab extends PluginSettingTab {
 			});
 
 		new Setting(div)
-			.setName('ID-Property')
-			.setDesc('Optional: Frontmatter-Property für die ID, z.B. "id". Rebuild und Anlegen nutzen dieses Property.')
+			.setName('ID property')
+			.setDesc('Optional frontmatter property for storing the ID, e.g. "ID" — used during rebuild and file creation.')
 			.addText(text => text
 				.setValue(type.idProperty ?? '')
-				.setPlaceholder('id')
+				.setPlaceholder('Property name')
 				.onChange(async val => {
 					type.idProperty = val.trim() || undefined;
 					await this.plugin.saveSettings();
@@ -156,11 +154,10 @@ export class AtheneGenealogySettingTab extends PluginSettingTab {
 			new Setting(tplDiv)
 				.addText(text => {
 					text.setValue(type.templates[i] ?? '').setPlaceholder('Templates/Person.md');
-					// Typeahead für Markdown-Dateien
-					new FileSuggest(this.app, text.inputEl, async val => {
+					new FileSuggest(this.app, text.inputEl, val => {
 						type.templates[i] = val;
 						text.setValue(val);
-						await this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					});
 					text.onChange(async val => {
 						type.templates[i] = val;
@@ -169,7 +166,7 @@ export class AtheneGenealogySettingTab extends PluginSettingTab {
 				})
 				.addButton(btn => btn
 					.setIcon('minus-circle')
-					.setTooltip('Entfernen')
+					.setTooltip('Remove')
 					.onClick(async () => {
 						type.templates.splice(i, 1);
 						await this.plugin.saveSettings();
@@ -179,7 +176,7 @@ export class AtheneGenealogySettingTab extends PluginSettingTab {
 
 		new Setting(tplDiv)
 			.addButton(btn => btn
-				.setButtonText('+ Template hinzufügen')
+				.setButtonText('Add template')
 				.onClick(async () => {
 					type.templates.push('');
 					await this.plugin.saveSettings();
