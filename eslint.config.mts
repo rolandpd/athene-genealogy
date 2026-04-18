@@ -29,6 +29,8 @@ export default tseslint.config(
 		"eslint.config.js",
 		"version-bump.mjs",
 		"scripts/**",
+		"coverage/**",
+		"vitest.config.ts",
 		"versions.json",
 		"main.js",
 	]),
