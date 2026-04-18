@@ -1,16 +1,22 @@
-import { Plugin } from 'obsidian';
+import { Plugin, TFile } from 'obsidian';
 import { AtheneDate, type DateQualifier } from './date';
 import { AtheneGenealogySettingTab, DEFAULT_SETTINGS } from './settings';
 import type { AthenePluginSettings } from './types';
 import { IdRegistry } from './registry/IdRegistry';
+import { FileFactory } from './factory/FileFactory';
 import { NewEntityModal } from './modal/NewEntityModal';
 import { TypePickerModal } from './modal/TypePickerModal';
+import { initI18n, t } from './i18n';
 
 /** Public API exposed on window.athene — usable from DataView JS blocks. */
 export interface AtheneApi {
 	/** Parse an EDTF string into an AtheneDate. Returns null for invalid input. */
 	parseDate(str: string, qualifiers?: DateQualifier[]): AtheneDate | null;
 	AtheneDate: typeof AtheneDate;
+	/** Returns the next ID for the given type ID without committing it. Returns null if type not found. */
+	nextId(typeId: string): Promise<string | null>;
+	/** Creates a file for the given type ID. Returns file/id/filename on success, null if type not found or on error. */
+	createFile(typeId: string, filename?: string): Promise<{ file: TFile; id: string; filename: string } | null>;
 }
 
 declare global {
@@ -22,22 +28,39 @@ declare global {
 export default class AtheneGenealogyPlugin extends Plugin {
 	settings!: AthenePluginSettings;
 	registry!: IdRegistry;
+	factory!: FileFactory;
 
 	async onload() {
 		await this.loadSettings();
+		await initI18n();
 
 		this.registry = new IdRegistry(this);
+		this.factory = new FileFactory(this.app, this.registry);
 
-		// Expose AtheneDate API globally so DataView JS blocks can use it without importing
+		// Expose public API globally so DataView JS blocks can use it without importing
 		window.athene = {
 			parseDate: (str, qualifiers) => AtheneDate.parse(str, qualifiers),
 			AtheneDate,
+			nextId: (typeId) => {
+				const config = this.settings.idTypes.find(type => type.id === typeId);
+				if (!config) return Promise.resolve(null);
+				return this.registry.peekNextId(config);
+			},
+			createFile: async (typeId, filename) => {
+				const config = this.settings.idTypes.find(type => type.id === typeId);
+				if (!config) return null;
+				try {
+					return await this.factory.createFile({ config, filename });
+				} catch {
+					return null;
+				}
+			},
 		};
 
 		// Immer verfügbarer Einstiegspunkt: öffnet Typ-Auswahl oder direkt das Modal
 		this.addCommand({
 			id: 'new-entity',
-			name: 'New: create file...',
+			name: t('cmd.newFile'),
 			callback: () => {
 				const types = this.settings.idTypes;
 				if (types.length === 0) return;
@@ -76,9 +99,9 @@ export default class AtheneGenealogyPlugin extends Plugin {
 		for (const idType of this.settings.idTypes) {
 			this.addCommand({
 				id: `new-${idType.id}`,
-				name: `Neu: ${idType.name}`,
+				name: t('cmd.newType', { name: idType.name }),
 				callback: () => {
-					const current = this.settings.idTypes.find(t => t.id === idType.id);
+					const current = this.settings.idTypes.find(type => type.id === idType.id);
 					if (current) new NewEntityModal(this.app, this.registry, current).open();
 				},
 			});

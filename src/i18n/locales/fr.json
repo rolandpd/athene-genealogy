@@ -1,0 +1,83 @@
+{
+  "cmd": {
+    "newFile": "Créer un nouveau fichier...",
+    "newType": "Créer '{{name}}'"
+  },
+  "modal": {
+    "title": "Créer '{{name}}'",
+    "filename": {
+      "label": "Nom du fichier",
+      "desc": "ID pré-rempli — saisissez le nom devant"
+    },
+    "template": {
+      "label": "Modèle"
+    },
+    "idWarning": "L'ID {{id}} n'est pas dans le nom du fichier — il sera réassigné.",
+    "idWarningReset": "Réinitialiser",
+    "btnCancel": "Annuler",
+    "btnCreate": "Créer",
+    "errNoFilename": "Veuillez saisir un nom de fichier.",
+    "errFileExists": "Le fichier existe déjà : {{path}}",
+    "errCreateFailed": "Erreur lors de la création du fichier : {{path}}",
+    "errTemplateNotFound": "Modèle introuvable : {{path}}",
+    "errIdPropertyNotSet": "Propriété ID non définie — fichier introuvable après application du modèle (déplacé ?).",
+    "noticeCreated": "{{type}} créé : {{name}}"
+  },
+  "typePicker": {
+    "placeholder": "Sélectionner le type…"
+  },
+  "settings": {
+    "locale": {
+      "name": "Langue d'affichage",
+      "desc": "Code de langue pour le formatage des dates (p. ex. \"fr\")",
+      "placeholder": "Code de langue"
+    },
+    "idTypes": {
+      "heading": "Types d'ID",
+      "desc": "Chaque entrée crée une commande dans la palette de commandes. Les nouveaux types sont disponibles immédiatement.",
+      "btnAdd": "Ajouter un type d'ID",
+      "newTypeName": "Nouveau"
+    },
+    "idRegistry": {
+      "heading": "Registre des ID",
+      "rebuild": {
+        "name": "Reconstruire l'index",
+        "desc": "Analyser le coffre pour les ID existants et mettre à jour le cache — à exécuter après la création manuelle de fichiers.",
+        "btn": "Reconstruire",
+        "notice": "Index des ID reconstruit."
+      }
+    },
+    "idType": {
+      "unnamed": "(sans nom)",
+      "tooltipRemove": "Supprimer",
+      "name": {
+        "label": "Nom",
+        "desc": "Nom d'affichage, p. ex. \"personne\" ou \"événement\""
+      },
+      "mask": {
+        "label": "Masque",
+        "desc": "Préfixe suivi de \"#\" comme espaces réservés pour les chiffres — p. ex. \"p####\" crée p0001, p0002 …",
+        "placeholder": "I####"
+      },
+      "folder": {
+        "label": "Dossier cible",
+        "desc": "Dossier pour les nouveaux fichiers",
+        "placeholder": "Personen"
+      },
+      "idProperty": {
+        "label": "Propriété ID",
+        "desc": "Propriété frontmatter optionnelle pour stocker l'ID — utilisée lors de la reconstruction et de la création de fichiers.",
+        "placeholder": "Nom de propriété"
+      },
+      "templates": {
+        "label": "Modèles",
+        "placeholder": "Modèles/Personne.md",
+        "tooltipRemove": "Supprimer",
+        "btnAdd": "Ajouter un modèle"
+      }
+    }
+  },
+  "suggest": {
+    "vaultRoot": "(Racine du coffre)"
+  }
+}

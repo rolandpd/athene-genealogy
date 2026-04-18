@@ -1,0 +1,83 @@
+{
+  "cmd": {
+    "newFile": "Utwórz nowy plik...",
+    "newType": "Utwórz '{{name}}'"
+  },
+  "modal": {
+    "title": "Utwórz '{{name}}'",
+    "filename": {
+      "label": "Nazwa pliku",
+      "desc": "ID wstępnie wypełnione — wpisz nazwę z przodu"
+    },
+    "template": {
+      "label": "Szablon"
+    },
+    "idWarning": "ID {{id}} nie jest w nazwie pliku — zostanie ponownie przypisane.",
+    "idWarningReset": "Resetuj",
+    "btnCancel": "Anuluj",
+    "btnCreate": "Utwórz",
+    "errNoFilename": "Proszę wpisać nazwę pliku.",
+    "errFileExists": "Plik już istnieje: {{path}}",
+    "errCreateFailed": "Błąd tworzenia pliku: {{path}}",
+    "errTemplateNotFound": "Szablon nie znaleziony: {{path}}",
+    "errIdPropertyNotSet": "Właściwość ID nie ustawiona — nie można zlokalizować pliku po zastosowaniu szablonu (przeniesiony?).",
+    "noticeCreated": "{{type}} utworzony: {{name}}"
+  },
+  "typePicker": {
+    "placeholder": "Wybierz typ…"
+  },
+  "settings": {
+    "locale": {
+      "name": "Język wyświetlania",
+      "desc": "Kod języka do formatowania dat (np. \"pl\")",
+      "placeholder": "Kod języka"
+    },
+    "idTypes": {
+      "heading": "Typy ID",
+      "desc": "Każdy wpis tworzy polecenie w palecie poleceń. Nowe typy są dostępne natychmiast.",
+      "btnAdd": "Dodaj typ ID",
+      "newTypeName": "Nowy"
+    },
+    "idRegistry": {
+      "heading": "Rejestr ID",
+      "rebuild": {
+        "name": "Przebuduj indeks",
+        "desc": "Przeskanuj vault w poszukiwaniu istniejących ID i zaktualizuj pamięć podręczną — uruchom po ręcznym tworzeniu plików.",
+        "btn": "Przebuduj",
+        "notice": "Indeks ID przebudowany."
+      }
+    },
+    "idType": {
+      "unnamed": "(nienazwany)",
+      "tooltipRemove": "Usuń",
+      "name": {
+        "label": "Nazwa",
+        "desc": "Nazwa wyświetlana, np. \"osoba\" lub \"zdarzenie\""
+      },
+      "mask": {
+        "label": "Maska",
+        "desc": "Prefiks po którym następują \"#\" jako miejsca na cyfry — np. \"p####\" tworzy p0001, p0002 …",
+        "placeholder": "I####"
+      },
+      "folder": {
+        "label": "Folder docelowy",
+        "desc": "Folder dla nowych plików",
+        "placeholder": "Personen"
+      },
+      "idProperty": {
+        "label": "Właściwość ID",
+        "desc": "Opcjonalna właściwość frontmatter do przechowywania ID — używana podczas przebudowy i tworzenia plików.",
+        "placeholder": "Nazwa właściwości"
+      },
+      "templates": {
+        "label": "Szablony",
+        "placeholder": "Szablony/Osoba.md",
+        "tooltipRemove": "Usuń",
+        "btnAdd": "Dodaj szablon"
+      }
+    }
+  },
+  "suggest": {
+    "vaultRoot": "(Korzeń vault)"
+  }
+}

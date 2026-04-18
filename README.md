@@ -71,6 +71,13 @@ Download `main.js`, `manifest.json`, and `styles.css` from the [latest release](
 
 While the plugin works without Templater, it is strongly recommended. Templates are applied using Templater's API when available, which means all `tp.*` variables work as usual.
 
+**Template design guidelines** when used with this plugin:
+
+- **Do not use `tp.file.rename()` or `tp.file.move()` in templates.** The plugin creates the file with the correct name before applying the template. Renaming or moving inside the template will decouple the file from the ID the plugin assigned.
+- **Do not set the `id` property in the template.** If an ID property is configured for the type, the plugin sets it after the template is applied — any value in the template will be overridden.
+- **Disable "Trigger Templater on new file creation"** in Templater's settings if it is enabled. This setting causes Templater to create an additional file automatically whenever any file is created, which conflicts with the plugin's own file creation.
+- `tp.file.title` and other `tp.file.*` variables work as expected — the file already has its final name when the template runs.
+
 ## Roadmap
 
 Planned for future releases:

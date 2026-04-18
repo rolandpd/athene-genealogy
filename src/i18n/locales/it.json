@@ -1,0 +1,83 @@
+{
+  "cmd": {
+    "newFile": "Crea nuovo file...",
+    "newType": "Crea '{{name}}'"
+  },
+  "modal": {
+    "title": "Crea '{{name}}'",
+    "filename": {
+      "label": "Nome file",
+      "desc": "ID precompilato — digita il nome davanti"
+    },
+    "template": {
+      "label": "Modello"
+    },
+    "idWarning": "L'ID {{id}} non è nel nome file — verrà riassegnato.",
+    "idWarningReset": "Reimposta",
+    "btnCancel": "Annulla",
+    "btnCreate": "Crea",
+    "errNoFilename": "Inserisci un nome file.",
+    "errFileExists": "Il file esiste già: {{path}}",
+    "errCreateFailed": "Errore durante la creazione del file: {{path}}",
+    "errTemplateNotFound": "Modello non trovato: {{path}}",
+    "errIdPropertyNotSet": "Proprietà ID non impostata — impossibile trovare il file dopo l'applicazione del modello (spostato?).",
+    "noticeCreated": "{{type}} creato: {{name}}"
+  },
+  "typePicker": {
+    "placeholder": "Seleziona tipo…"
+  },
+  "settings": {
+    "locale": {
+      "name": "Lingua di visualizzazione",
+      "desc": "Codice lingua per la formattazione delle date (es. \"it\")",
+      "placeholder": "Codice lingua"
+    },
+    "idTypes": {
+      "heading": "Tipi di ID",
+      "desc": "Ogni voce crea un comando nella tavolozza dei comandi. I nuovi tipi sono disponibili immediatamente.",
+      "btnAdd": "Aggiungi tipo ID",
+      "newTypeName": "Nuovo"
+    },
+    "idRegistry": {
+      "heading": "Registro ID",
+      "rebuild": {
+        "name": "Ricostruisci indice",
+        "desc": "Scansiona il vault per gli ID esistenti e aggiorna la cache — esegui dopo la creazione manuale di file.",
+        "btn": "Ricostruisci",
+        "notice": "Indice ID ricostruito."
+      }
+    },
+    "idType": {
+      "unnamed": "(senza nome)",
+      "tooltipRemove": "Rimuovi",
+      "name": {
+        "label": "Nome",
+        "desc": "Nome visualizzato, es. \"persona\" o \"evento\""
+      },
+      "mask": {
+        "label": "Maschera",
+        "desc": "Prefisso seguito da \"#\" come segnaposto per le cifre — es. \"p####\" crea p0001, p0002 …",
+        "placeholder": "I####"
+      },
+      "folder": {
+        "label": "Cartella di destinazione",
+        "desc": "Cartella per i nuovi file",
+        "placeholder": "Personen"
+      },
+      "idProperty": {
+        "label": "Proprietà ID",
+        "desc": "Proprietà frontmatter opzionale per memorizzare l'ID — usata durante la ricostruzione e la creazione di file.",
+        "placeholder": "Nome proprietà"
+      },
+      "templates": {
+        "label": "Modelli",
+        "placeholder": "Modelli/Persona.md",
+        "tooltipRemove": "Rimuovi",
+        "btnAdd": "Aggiungi modello"
+      }
+    }
+  },
+  "suggest": {
+    "vaultRoot": "(Radice vault)"
+  }
+}

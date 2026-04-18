@@ -1,0 +1,83 @@
+{
+  "cmd": {
+    "newFile": "Crear nove file...",
+    "newType": "Crear '{{name}}'"
+  },
+  "modal": {
+    "title": "Crear '{{name}}'",
+    "filename": {
+      "label": "Nomine de file",
+      "desc": "ID pre-completate — scribe le nomine ante"
+    },
+    "template": {
+      "label": "Patrono"
+    },
+    "idWarning": "Le ID {{id}} non es in le nomine de file — illo sera reassignate.",
+    "idWarningReset": "Restablir",
+    "btnCancel": "Cancellar",
+    "btnCreate": "Crear",
+    "errNoFilename": "Entrar un nomine de file, per favor.",
+    "errFileExists": "Le file existe jam: {{path}}",
+    "errCreateFailed": "Error in creation del file: {{path}}",
+    "errTemplateNotFound": "Patrono non trovate: {{path}}",
+    "errIdPropertyNotSet": "Proprietate ID non definite — impossibile localizar le file post application del patrono (movite?).",
+    "noticeCreated": "{{type}} create: {{name}}"
+  },
+  "typePicker": {
+    "placeholder": "Seliger typo…"
+  },
+  "settings": {
+    "locale": {
+      "name": "Lingua de exhibition",
+      "desc": "Codice de lingua pro formattar datas (p.ex. \"ia\")",
+      "placeholder": "Codice de lingua"
+    },
+    "idTypes": {
+      "heading": "Typos de ID",
+      "desc": "Cata entrata crea un commando in le paletta de commandos. Nove typos es disponibile immediatemente.",
+      "btnAdd": "Adder typo de ID",
+      "newTypeName": "Nove"
+    },
+    "idRegistry": {
+      "heading": "Registro de ID",
+      "rebuild": {
+        "name": "Reconstruer indice",
+        "desc": "Scander le vault pro IDs existente e actualisar le cache — executar post creation manual de files.",
+        "btn": "Reconstruer",
+        "notice": "Indice de ID reconstruite."
+      }
+    },
+    "idType": {
+      "unnamed": "(sin nomine)",
+      "tooltipRemove": "Remover",
+      "name": {
+        "label": "Nomine",
+        "desc": "Nomine de exhibition, p.ex. \"persona\" o \"evento\""
+      },
+      "mask": {
+        "label": "Maschera",
+        "desc": "Prefixo sequite per \"#\" como placeholders de cifras — p.ex. \"p####\" crea p0001, p0002 …",
+        "placeholder": "I####"
+      },
+      "folder": {
+        "label": "Dossier destination",
+        "desc": "Dossier pro nove files",
+        "placeholder": "Personen"
+      },
+      "idProperty": {
+        "label": "Proprietate ID",
+        "desc": "Proprietate frontmatter optional pro immagazinar le ID — usate durante reconstrution e creation de files.",
+        "placeholder": "Nomine de proprietate"
+      },
+      "templates": {
+        "label": "Patronos",
+        "placeholder": "Patronos/Persona.md",
+        "tooltipRemove": "Remover",
+        "btnAdd": "Adder patrono"
+      }
+    }
+  },
+  "suggest": {
+    "vaultRoot": "(Radice del vault)"
+  }
+}

@@ -1,4 +1,5 @@
 import { AbstractInputSuggest, App, TFile, TFolder } from 'obsidian';
+import { t } from './i18n';
 
 /**
  * Typeahead-Eingabe für Markdown-Dateien im Vault.
@@ -59,7 +60,7 @@ export class FolderSuggest extends AbstractInputSuggest<TFolder> {
 	}
 
 	renderSuggestion(folder: TFolder, el: HTMLElement): void {
-		el.setText(folder.path === '/' ? '(Vault-Root)' : folder.path);
+		el.setText(folder.path === '/' ? t('suggest.vaultRoot') : folder.path);
 	}
 
 	selectSuggestion(folder: TFolder, _evt: MouseEvent | KeyboardEvent): void {

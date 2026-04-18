@@ -1,0 +1,83 @@
+{
+  "cmd": {
+    "newFile": "Crear nuevo archivo...",
+    "newType": "Crear '{{name}}'"
+  },
+  "modal": {
+    "title": "Crear '{{name}}'",
+    "filename": {
+      "label": "Nombre de archivo",
+      "desc": "ID precargado — escribe el nombre delante"
+    },
+    "template": {
+      "label": "Plantilla"
+    },
+    "idWarning": "El ID {{id}} no está en el nombre de archivo — será reasignado.",
+    "idWarningReset": "Restablecer",
+    "btnCancel": "Cancelar",
+    "btnCreate": "Crear",
+    "errNoFilename": "Por favor, introduce un nombre de archivo.",
+    "errFileExists": "El archivo ya existe: {{path}}",
+    "errCreateFailed": "Error al crear el archivo: {{path}}",
+    "errTemplateNotFound": "Plantilla no encontrada: {{path}}",
+    "errIdPropertyNotSet": "Propiedad ID no definida — no se pudo localizar el archivo tras aplicar la plantilla (¿movido?).",
+    "noticeCreated": "{{type}} creado: {{name}}"
+  },
+  "typePicker": {
+    "placeholder": "Seleccionar tipo…"
+  },
+  "settings": {
+    "locale": {
+      "name": "Idioma de visualización",
+      "desc": "Código de idioma para el formato de fechas (p. ej. \"es\")",
+      "placeholder": "Código de idioma"
+    },
+    "idTypes": {
+      "heading": "Tipos de ID",
+      "desc": "Cada entrada crea un comando en la paleta de comandos. Los nuevos tipos están disponibles de inmediato.",
+      "btnAdd": "Agregar tipo de ID",
+      "newTypeName": "Nuevo"
+    },
+    "idRegistry": {
+      "heading": "Registro de ID",
+      "rebuild": {
+        "name": "Reconstruir índice",
+        "desc": "Escanear el vault en busca de IDs existentes y actualizar la caché — ejecutar tras crear archivos manualmente.",
+        "btn": "Reconstruir",
+        "notice": "Índice de ID reconstruido."
+      }
+    },
+    "idType": {
+      "unnamed": "(sin nombre)",
+      "tooltipRemove": "Eliminar",
+      "name": {
+        "label": "Nombre",
+        "desc": "Nombre de visualización, p. ej. \"persona\" o \"evento\""
+      },
+      "mask": {
+        "label": "Máscara",
+        "desc": "Prefijo seguido de \"#\" como marcadores de posición para dígitos — p. ej. \"p####\" crea p0001, p0002 …",
+        "placeholder": "I####"
+      },
+      "folder": {
+        "label": "Carpeta de destino",
+        "desc": "Carpeta para nuevos archivos",
+        "placeholder": "Personen"
+      },
+      "idProperty": {
+        "label": "Propiedad ID",
+        "desc": "Propiedad frontmatter opcional para almacenar el ID — utilizada durante la reconstrucción y la creación de archivos.",
+        "placeholder": "Nombre de propiedad"
+      },
+      "templates": {
+        "label": "Plantillas",
+        "placeholder": "Plantillas/Persona.md",
+        "tooltipRemove": "Eliminar",
+        "btnAdd": "Agregar plantilla"
+      }
+    }
+  },
+  "suggest": {
+    "vaultRoot": "(Raíz del vault)"
+  }
+}

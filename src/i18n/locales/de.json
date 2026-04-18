@@ -1,0 +1,83 @@
+{
+  "cmd": {
+    "newFile": "Erstelle neue Datei…",
+    "newType": "Erstelle '{{name}}'"
+  },
+  "modal": {
+    "title": "Erstelle '{{name}}'",
+    "filename": {
+      "label": "Dateiname",
+      "desc": "ID vorausgefüllt — Namen davor eingeben"
+    },
+    "template": {
+      "label": "Vorlage"
+    },
+    "idWarning": "ID {{id}} ist nicht im Dateinamen — sie wird neu vergeben.",
+    "idWarningReset": "Zurücksetzen",
+    "btnCancel": "Abbrechen",
+    "btnCreate": "Erstellen",
+    "errNoFilename": "Bitte einen Dateinamen eingeben.",
+    "errFileExists": "Datei existiert bereits: {{path}}",
+    "errCreateFailed": "Fehler beim Erstellen der Datei: {{path}}",
+    "errTemplateNotFound": "Vorlage nicht gefunden: {{path}}",
+    "errIdPropertyNotSet": "ID-Property nicht gesetzt — Datei nach dem Anwenden der Vorlage nicht gefunden (verschoben?).",
+    "noticeCreated": "{{type}} erstellt: {{name}}"
+  },
+  "typePicker": {
+    "placeholder": "Typ auswählen …"
+  },
+  "settings": {
+    "locale": {
+      "name": "Anzeigesprache",
+      "desc": "Sprachcode für die Datumsformatierung (z. B. 'de')",
+      "placeholder": "Sprachcode"
+    },
+    "idTypes": {
+      "heading": "ID-Typen",
+      "desc": "Jeder Eintrag erzeugt einen Befehl in der Befehlspalette. Neue Typen sind sofort verfügbar.",
+      "btnAdd": "ID-Typ hinzufügen",
+      "newTypeName": "Neu"
+    },
+    "idRegistry": {
+      "heading": "ID-Register",
+      "rebuild": {
+        "name": "Index neu aufbauen",
+        "desc": "Vault nach vorhandenen IDs durchsuchen und Cache aktualisieren — nach manuellem Anlegen von Dateien ausführen.",
+        "btn": "Neu aufbauen",
+        "notice": "ID-Index neu aufgebaut."
+      }
+    },
+    "idType": {
+      "unnamed": "(unbenannt)",
+      "tooltipRemove": "Entfernen",
+      "name": {
+        "label": "Name",
+        "desc": "Anzeigename, z. B. 'Person' oder 'Ereignis'"
+      },
+      "mask": {
+        "label": "Maske",
+        "desc": "Präfix gefolgt von '#'-Platzhaltern für Ziffern — z. B. erzeugt 'p####' p0001, p0002 …",
+        "placeholder": "I####"
+      },
+      "folder": {
+        "label": "Zielordner",
+        "desc": "Ordner für neue Dateien",
+        "placeholder": "Personen"
+      },
+      "idProperty": {
+        "label": "ID-Property",
+        "desc": "Optionale Frontmatter-Property für die ID, z. B. 'id' — wird beim Neuaufbau und beim Erstellen verwendet.",
+        "placeholder": "Property-Name"
+      },
+      "templates": {
+        "label": "Vorlagen",
+        "placeholder": "Vorlagen/Person.md",
+        "tooltipRemove": "Entfernen",
+        "btnAdd": "Vorlage hinzufügen"
+      }
+    }
+  },
+  "suggest": {
+    "vaultRoot": "(Vault-Wurzel)"
+  }
+}

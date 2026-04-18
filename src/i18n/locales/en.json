@@ -1,0 +1,83 @@
+{
+  "cmd": {
+    "newFile": "Create new file...",
+    "newType": "Create new '{{name}}'"
+  },
+  "modal": {
+    "title": "Create new '{{name}}'",
+    "filename": {
+      "label": "Filename",
+      "desc": "ID pre-filled — type the name in front"
+    },
+    "template": {
+      "label": "Template"
+    },
+    "idWarning": "ID {{id}} is not in the filename — it will be reassigned.",
+    "idWarningReset": "Reset",
+    "btnCancel": "Cancel",
+    "btnCreate": "Create",
+    "errNoFilename": "Please enter a filename.",
+    "errFileExists": "File already exists: {{path}}",
+    "errCreateFailed": "Error creating file: {{path}}",
+    "errTemplateNotFound": "Template not found: {{path}}",
+    "errIdPropertyNotSet": "ID property not set — could not locate file after template was applied (moved to unknown location?).",
+    "noticeCreated": "{{type}} created: {{name}}"
+  },
+  "typePicker": {
+    "placeholder": "Select type…"
+  },
+  "settings": {
+    "locale": {
+      "name": "Display language",
+      "desc": "Language code for date formatting (e.g. \"en\")",
+      "placeholder": "Language code"
+    },
+    "idTypes": {
+      "heading": "ID types",
+      "desc": "Each entry creates a command in the command palette. New types are available immediately.",
+      "btnAdd": "Add ID type",
+      "newTypeName": "New"
+    },
+    "idRegistry": {
+      "heading": "ID registry",
+      "rebuild": {
+        "name": "Rebuild index",
+        "desc": "Scan vault for existing ids and update the cache — run this after creating files manually.",
+        "btn": "Rebuild",
+        "notice": "ID index rebuilt."
+      }
+    },
+    "idType": {
+      "unnamed": "(unnamed)",
+      "tooltipRemove": "Remove",
+      "name": {
+        "label": "Name",
+        "desc": "Display name, e.g. \"person\" or \"event\""
+      },
+      "mask": {
+        "label": "Mask",
+        "desc": "Prefix followed by \"#\" digit placeholders — e.g. \"p####\" creates p0001, p0002 …",
+        "placeholder": "I####"
+      },
+      "folder": {
+        "label": "Target folder",
+        "desc": "Folder for new files",
+        "placeholder": "Personen"
+      },
+      "idProperty": {
+        "label": "ID property",
+        "desc": "Optional frontmatter property for storing the ID, e.g. \"id\" — used during rebuild and file creation.",
+        "placeholder": "Property name"
+      },
+      "templates": {
+        "label": "Templates",
+        "placeholder": "Templates/Person.md",
+        "tooltipRemove": "Remove",
+        "btnAdd": "Add template"
+      }
+    }
+  },
+  "suggest": {
+    "vaultRoot": "(Vault root)"
+  }
+}

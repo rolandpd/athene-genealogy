@@ -2,6 +2,7 @@ import { App, FuzzySuggestModal } from 'obsidian';
 import type { IdRegistry } from '../registry/IdRegistry';
 import type { IdTypeConfig } from '../types';
 import { NewEntityModal } from './NewEntityModal';
+import { t } from '../i18n';
 
 /**
  * Zeigt alle konfigurierten ID-Typen zur Auswahl an.
@@ -14,7 +15,7 @@ export class TypePickerModal extends FuzzySuggestModal<IdTypeConfig> {
 		private types: IdTypeConfig[],
 	) {
 		super(app);
-		this.setPlaceholder('Typ wählen …');
+		this.setPlaceholder(t('typePicker.placeholder'));
 	}
 
 	getItems(): IdTypeConfig[] {
