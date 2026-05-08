@@ -265,6 +265,67 @@ export class AtheneDate {
     return this.rawString;
   }
 
+  // ── Age calculation ───────────────────────────────────────────────────────
+
+  /**
+   * Calculates the age between two dates as a human-readable string.
+   * Both strings must be valid EDTF / ISO date strings (YYYY, YYYY-MM, or YYYY-MM-DD).
+   * Uses the anchor date (isoDate) of each — qualifiers like ~ or ? do not shift the value here.
+   *
+   * @param birthDateStr ISO/EDTF string for birth date
+   * @param eventDateStr ISO/EDTF string for the event date
+   * @param qualifier Optional display qualifier: '~' prepends, '?' appends to the result
+   * @returns "40" (years), "13m" (months < 24), "40d" (days < 62), or null if not computable
+   */
+  static calculateAge(birthDateStr: string, eventDateStr: string, qualifier?: string): string | null {
+    const birth = AtheneDate.parse(birthDateStr);
+    const event = AtheneDate.parse(eventDateStr);
+    if (!birth || !event) return null;
+
+    const birthIso = birth.isoDate;
+    const eventIso = event.isoDate;
+    if (!birthIso || !eventIso) return null;
+
+    const toUTCDate = (iso: string): Date => {
+      const padded = iso.length === 4 ? `${iso}-01-01` : iso.length === 7 ? `${iso}-01` : iso;
+      return new Date(`${padded}T00:00:00Z`);
+    };
+
+    const birthDate = toUTCDate(birthIso);
+    const eventDate = toUTCDate(eventIso);
+
+    if (!Number.isFinite(birthDate.getTime()) || !Number.isFinite(eventDate.getTime())) return null;
+    if (eventDate <= birthDate) return null;
+
+    const diffMs = eventDate.getTime() - birthDate.getTime();
+    const diffDays = Math.floor(diffMs / 86_400_000);
+
+    let age: string;
+    if (diffDays < 62) {
+      age = `${diffDays}d`;
+    } else {
+      let months = (eventDate.getUTCFullYear() - birthDate.getUTCFullYear()) * 12
+        + eventDate.getUTCMonth() - birthDate.getUTCMonth();
+      if (eventDate.getUTCDate() < birthDate.getUTCDate()) months--;
+
+      if (months < 24) {
+        age = `${months}m`;
+      } else {
+        let years = eventDate.getUTCFullYear() - birthDate.getUTCFullYear();
+        if (eventDate.getUTCMonth() < birthDate.getUTCMonth() ||
+          (eventDate.getUTCMonth() === birthDate.getUTCMonth() &&
+            eventDate.getUTCDate() < birthDate.getUTCDate())) {
+          years--;
+        }
+        age = String(years);
+      }
+    }
+
+    if (qualifier === '~') return `~${age}`;
+    if (qualifier === '?') return `${age}?`;
+    return age;
+  }
+
   /** Legacy wikilink format "[[ISO-date|display]]" for backward compatibility. */
   toWikilink(): string {
     const iso = this.isoDate ?? this.rawString;

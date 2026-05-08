@@ -254,6 +254,60 @@ describe('AtheneDate.toSortKey', () => {
 	});
 });
 
+// ── calculateAge() ────────────────────────────────────────────────────────────
+
+describe('AtheneDate.calculateAge', () => {
+	it('returns null for invalid inputs', () => {
+		expect(AtheneDate.calculateAge('', '1952-03-04')).toBeNull();
+		expect(AtheneDate.calculateAge('1900-01-01', '')).toBeNull();
+		expect(AtheneDate.calculateAge('not-a-date', '1952-03-04')).toBeNull();
+	});
+
+	it('returns null when event is before or on birth date', () => {
+		expect(AtheneDate.calculateAge('1952-03-04', '1952-03-04')).toBeNull();
+		expect(AtheneDate.calculateAge('1952-03-04', '1950-01-01')).toBeNull();
+	});
+
+	it('returns years for age >= 2 years', () => {
+		expect(AtheneDate.calculateAge('1900-01-01', '1940-01-01')).toBe('40');
+		expect(AtheneDate.calculateAge('1900-01-01', '1902-01-01')).toBe('2');
+	});
+
+	it('floors partial years', () => {
+		// 40 years and 6 months → still "40"
+		expect(AtheneDate.calculateAge('1900-01-01', '1940-07-01')).toBe('40');
+	});
+
+	it('returns months (m) for age < 24 months', () => {
+		expect(AtheneDate.calculateAge('1952-01-01', '1953-02-01')).toBe('13m');
+		expect(AtheneDate.calculateAge('1952-01-01', '1953-12-31')).toBe('23m');
+	});
+
+	it('returns days (d) for age < 62 days', () => {
+		expect(AtheneDate.calculateAge('1952-01-01', '1952-02-10')).toBe('40d');
+		expect(AtheneDate.calculateAge('1952-01-01', '1952-01-02')).toBe('1d');
+	});
+
+	it('works with year-only and year-month dates', () => {
+		const age = AtheneDate.calculateAge('1900', '1940');
+		expect(age).toBe('40');
+		const ageM = AtheneDate.calculateAge('1950-06', '1951-09');
+		expect(ageM).toBe('15m');
+	});
+
+	it('prepends ~ for approximate qualifier', () => {
+		expect(AtheneDate.calculateAge('1900-01-01', '1940-01-01', '~')).toBe('~40');
+	});
+
+	it('appends ? for uncertain qualifier', () => {
+		expect(AtheneDate.calculateAge('1900-01-01', '1940-01-01', '?')).toBe('40?');
+	});
+
+	it('ignores unknown qualifiers', () => {
+		expect(AtheneDate.calculateAge('1900-01-01', '1940-01-01', 'X')).toBe('40');
+	});
+});
+
 // ── isoDate & rawString ───────────────────────────────────────────────────────
 
 describe('AtheneDate accessors', () => {

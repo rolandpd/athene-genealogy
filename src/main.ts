@@ -14,6 +14,19 @@ export interface AtheneApi {
 	/** Parse an EDTF string into an AtheneDate. Returns null for invalid input. */
 	parseDate(str: string, qualifiers?: DateQualifier[]): AtheneDate | null;
 	AtheneDate: typeof AtheneDate;
+	/**
+	 * Calculate age between two ISO/EDTF date strings (YYYY, YYYY-MM, YYYY-MM-DD).
+	 * Returns "40" (years), "13m" (months < 24), "40d" (days < 62), or null.
+	 * Pass qualifier '~' or '?' to mark the result as approximate/uncertain.
+	 *
+	 * Usage in DataView:
+	 *   const birthIso = dv.page(ctx.Geburt)?.Datum?.fileName?.();
+	 *   const eventIso = dv.array(ev.Datum)[0]?.fileName?.();
+	 *   const qualifier = dv.array(ev.Datum)[0]?.display?.includes('~') ? '~'
+	 *                   : dv.array(ev.Datum)[0]?.display?.includes('?') ? '?' : undefined;
+	 *   const age = window.athene?.calculateAge(birthIso, eventIso, qualifier);
+	 */
+	calculateAge(birthDateStr: string, eventDateStr: string, qualifier?: string): string | null;
 	/** Returns the next ID for the given type ID without committing it. Returns null if type not found. */
 	nextId(typeId: string): Promise<string | null>;
 	/** Creates a file for the given type ID. Returns file/id/filename on success, null if type not found or on error. */
@@ -44,6 +57,8 @@ export default class AtheneGenealogyPlugin extends Plugin {
 		window.athene = {
 			parseDate: (str, qualifiers) => AtheneDate.parse(str, qualifiers),
 			AtheneDate,
+			calculateAge: (birthDateStr, eventDateStr, qualifier) =>
+				AtheneDate.calculateAge(birthDateStr, eventDateStr, qualifier),
 			nextId: (typeId) => {
 				const config = this.settings.idTypes.find(type => type.id === typeId);
 				if (!config) return Promise.resolve(null);
