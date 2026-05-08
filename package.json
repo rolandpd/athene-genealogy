@@ -1,6 +1,6 @@
 {
 	"name": "athene-genealogy",
-	"version": "0.9.6",
+	"version": "0.9.7",
 	"description": "ID registry, file creation modal and Templater integration for genealogical data management.",
 	"main": "main.js",
 	"type": "module",
