@@ -8,6 +8,7 @@ import { NewEntityModal } from './modal/NewEntityModal';
 import { TypePickerModal } from './modal/TypePickerModal';
 import { initI18n, t } from './i18n';
 import { setupDateLinks } from './date/DateLinkHandler';
+import { AtheneZeitleisteView, ZEITLEISTE_VIEW_TYPE } from './bases/ZeitleisteView';
 
 /** Public API exposed on window.athene — usable from DataView JS blocks. */
 export interface AtheneApi {
@@ -52,6 +53,12 @@ export default class AtheneGenealogyPlugin extends Plugin {
 		this.factory = new FileFactory(this.app, this.registry);
 
 		setupDateLinks(this);
+
+		this.registerBasesView(ZEITLEISTE_VIEW_TYPE, {
+			name: 'Zeitleiste',
+			icon: 'list-ordered',
+			factory: (controller, containerEl) => new AtheneZeitleisteView(controller, containerEl, this.app),
+		});
 
 		// Expose public API globally so DataView JS blocks can use it without importing
 		window.athene = {
