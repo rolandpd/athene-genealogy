@@ -1,4 +1,7 @@
 {
+  "confirm": {
+    "cancel": "Abbrechen"
+  },
   "cmd": {
     "newFile": "Erstelle neue Datei…",
     "newType": "Erstelle '{{name}}'"
@@ -38,18 +41,14 @@
       "btnAdd": "ID-Typ hinzufügen",
       "newTypeName": "Neu"
     },
-    "idRegistry": {
-      "heading": "ID-Register",
-      "rebuild": {
-        "name": "Index neu aufbauen",
-        "desc": "Vault nach vorhandenen IDs durchsuchen und Cache aktualisieren — nach manuellem Anlegen von Dateien ausführen.",
-        "btn": "Neu aufbauen",
-        "notice": "ID-Index neu aufgebaut."
-      }
-    },
     "idType": {
       "unnamed": "(unbenannt)",
       "tooltipRemove": "Entfernen",
+      "confirmRemove": {
+        "title": "ID-Typ entfernen?",
+        "message": "Den ID-Typ '{{name}}' samt Einstellungen wirklich entfernen? Das lässt sich nicht rückgängig machen.",
+        "btnConfirm": "Entfernen"
+      },
       "name": {
         "label": "Name",
         "desc": "Anzeigename, z. B. 'Person' oder 'Ereignis'"

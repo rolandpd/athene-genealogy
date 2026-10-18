@@ -1,4 +1,7 @@
 {
+  "confirm": {
+    "cancel": "Cancel"
+  },
   "cmd": {
     "newFile": "Create new file...",
     "newType": "Create new '{{name}}'"
@@ -38,18 +41,14 @@
       "btnAdd": "Add ID type",
       "newTypeName": "New"
     },
-    "idRegistry": {
-      "heading": "ID registry",
-      "rebuild": {
-        "name": "Rebuild index",
-        "desc": "Scan vault for existing ids and update the cache — run this after creating files manually.",
-        "btn": "Rebuild",
-        "notice": "ID index rebuilt."
-      }
-    },
     "idType": {
       "unnamed": "(unnamed)",
       "tooltipRemove": "Remove",
+      "confirmRemove": {
+        "title": "Remove ID type?",
+        "message": "Really remove the ID type '{{name}}' and its settings? This cannot be undone.",
+        "btnConfirm": "Remove"
+      },
       "name": {
         "label": "Name",
         "desc": "Display name, e.g. \"person\" or \"event\""

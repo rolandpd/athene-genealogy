@@ -24,14 +24,11 @@ export interface IdTypeConfig {
 export interface AthenePluginSettings {
 	locale: string;
 	idTypes: IdTypeConfig[];
-	/** Cache: Masken-Präfix → aktuell höchste vergebene Nummer */
-	idCache: Record<string, number>;
 }
 
 export const DEFAULT_SETTINGS: AthenePluginSettings = {
 	locale: 'de',
 	idTypes: [],
-	idCache: {},
 };
 
 // ── Masken-Hilfsfunktionen ────────────────────────────────────────────────────

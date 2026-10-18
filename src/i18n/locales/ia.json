@@ -1,4 +1,7 @@
 {
+  "confirm": {
+    "cancel": "Cancellar"
+  },
   "cmd": {
     "newFile": "Crear nove file...",
     "newType": "Crear '{{name}}'"
@@ -38,18 +41,14 @@
       "btnAdd": "Adder typo de ID",
       "newTypeName": "Nove"
     },
-    "idRegistry": {
-      "heading": "Registro de ID",
-      "rebuild": {
-        "name": "Reconstruer indice",
-        "desc": "Scander le vault pro IDs existente e actualisar le cache — executar post creation manual de files.",
-        "btn": "Reconstruer",
-        "notice": "Indice de ID reconstruite."
-      }
-    },
     "idType": {
       "unnamed": "(sin nomine)",
       "tooltipRemove": "Remover",
+      "confirmRemove": {
+        "title": "Remover typo de ID?",
+        "message": "Remover vermente le typo de ID '{{name}}' e su configurationes? Isto non pote esser disfacite.",
+        "btnConfirm": "Remover"
+      },
       "name": {
         "label": "Nomine",
         "desc": "Nomine de exhibition, p.ex. \"persona\" o \"evento\""

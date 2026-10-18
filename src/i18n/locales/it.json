@@ -1,4 +1,7 @@
 {
+  "confirm": {
+    "cancel": "Annulla"
+  },
   "cmd": {
     "newFile": "Crea nuovo file...",
     "newType": "Crea '{{name}}'"
@@ -38,18 +41,14 @@
       "btnAdd": "Aggiungi tipo ID",
       "newTypeName": "Nuovo"
     },
-    "idRegistry": {
-      "heading": "Registro ID",
-      "rebuild": {
-        "name": "Ricostruisci indice",
-        "desc": "Scansiona il vault per gli ID esistenti e aggiorna la cache — esegui dopo la creazione manuale di file.",
-        "btn": "Ricostruisci",
-        "notice": "Indice ID ricostruito."
-      }
-    },
     "idType": {
       "unnamed": "(senza nome)",
       "tooltipRemove": "Rimuovi",
+      "confirmRemove": {
+        "title": "Rimuovere il tipo di ID?",
+        "message": "Rimuovere davvero il tipo di ID '{{name}}' e le sue impostazioni? L'operazione non è reversibile.",
+        "btnConfirm": "Rimuovi"
+      },
       "name": {
         "label": "Nome",
         "desc": "Nome visualizzato, es. \"persona\" o \"evento\""

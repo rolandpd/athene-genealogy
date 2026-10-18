@@ -1,4 +1,7 @@
 {
+  "confirm": {
+    "cancel": "Cancelar"
+  },
   "cmd": {
     "newFile": "Crear nuevo archivo...",
     "newType": "Crear '{{name}}'"
@@ -38,18 +41,14 @@
       "btnAdd": "Agregar tipo de ID",
       "newTypeName": "Nuevo"
     },
-    "idRegistry": {
-      "heading": "Registro de ID",
-      "rebuild": {
-        "name": "Reconstruir índice",
-        "desc": "Escanear el vault en busca de IDs existentes y actualizar la caché — ejecutar tras crear archivos manualmente.",
-        "btn": "Reconstruir",
-        "notice": "Índice de ID reconstruido."
-      }
-    },
     "idType": {
       "unnamed": "(sin nombre)",
       "tooltipRemove": "Eliminar",
+      "confirmRemove": {
+        "title": "¿Eliminar tipo de ID?",
+        "message": "¿Eliminar realmente el tipo de ID '{{name}}' y su configuración? No se puede deshacer.",
+        "btnConfirm": "Eliminar"
+      },
       "name": {
         "label": "Nombre",
         "desc": "Nombre de visualización, p. ej. \"persona\" o \"evento\""

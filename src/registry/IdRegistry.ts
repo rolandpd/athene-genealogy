@@ -1,60 +1,53 @@
 import { App } from 'obsidian';
 import { formatWithMask, parseMask } from '../types';
-import type { AthenePluginSettings, IdTypeConfig } from '../types';
+import type { IdTypeConfig } from '../types';
 
 /** Minimales Interface, das IdRegistry vom Plugin erwartet — vermeidet zirkuläre Imports */
 interface RegistryHost {
 	app: App;
-	settings: AthenePluginSettings;
-	saveSettings(): Promise<void>;
 }
 
 export class IdRegistry {
+	/**
+	 * Höchste in dieser Sitzung selbst vergebene Nummer je Präfix.
+	 * Nur als Absicherung: metadataCache hinkt der Dateierstellung hinterher,
+	 * ein Frischscan direkt nach dem Anlegen sieht die neue Datei also noch nicht.
+	 * Nicht persistiert — beim Neuladen des Plugins liefert der Scan die Wahrheit.
+	 */
+	private sessionMax: Record<string, number> = {};
+
 	constructor(private host: RegistryHost) {}
 
 	/**
-	 * Gibt die nächste ID zurück, ohne den Cache zu verändern.
+	 * Gibt die nächste freie ID zurück, ohne sie zu belegen.
 	 * Für die Vorschau im Modal.
 	 */
 	async peekNextId(config: IdTypeConfig): Promise<string> {
-		const current = await this.getCurrentMax(config);
-		return formatWithMask(config.mask, current + 1);
+		return formatWithMask(config.mask, (await this.getCurrentMax(config)) + 1);
 	}
 
 	/**
-	 * Vergibt die nächste ID: inkrementiert den Cache und persistiert ihn.
+	 * Vergibt die nächste freie ID und merkt sie für diese Sitzung vor.
 	 * Nur aufrufen, wenn die Datei tatsächlich angelegt wird.
 	 */
 	async commitNextId(config: IdTypeConfig): Promise<string> {
 		const next = (await this.getCurrentMax(config)) + 1;
 		const { prefix } = parseMask(config.mask);
-		this.host.settings.idCache[prefix] = next;
-		await this.host.saveSettings();
+		this.sessionMax[prefix] = next;
 		return formatWithMask(config.mask, next);
-	}
-
-	/**
-	 * Scannt den Vault und baut den Cache für alle konfigurierten Typen neu auf.
-	 * Bevorzugt Frontmatter-Property (wenn idProperty gesetzt), Dateiname als Fallback.
-	 */
-	async rebuildAll(): Promise<void> {
-		for (const idType of this.host.settings.idTypes) {
-			const { prefix } = parseMask(idType.mask);
-			this.host.settings.idCache[prefix] = await this.scanMaxId(idType);
-		}
-		await this.host.saveSettings();
 	}
 
 	// ── Privat ──────────────────────────────────────────────────────────────
 
+	/**
+	 * Ermittelt die höchste belegte Nummer. Es wird bei jedem Aufruf frisch
+	 * gescannt: Einträge werden selten angelegt, ein persistenter Cache läuft
+	 * dagegen bei manuell erstellten Dateien aus dem Tritt und führt zu
+	 * doppelt vergebenen IDs.
+	 */
 	private async getCurrentMax(config: IdTypeConfig): Promise<number> {
 		const { prefix } = parseMask(config.mask);
-		const cached = this.host.settings.idCache[prefix];
-		if (cached !== undefined) return cached;
-		const max = await this.scanMaxId(config);
-		this.host.settings.idCache[prefix] = max;
-		await this.host.saveSettings();
-		return max;
+		return Math.max(await this.scanMaxId(config), this.sessionMax[prefix] ?? 0);
 	}
 
 	private async scanMaxId(config: IdTypeConfig): Promise<number> {

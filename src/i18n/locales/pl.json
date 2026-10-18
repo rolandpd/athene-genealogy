@@ -1,4 +1,7 @@
 {
+  "confirm": {
+    "cancel": "Anuluj"
+  },
   "cmd": {
     "newFile": "Utwórz nowy plik...",
     "newType": "Utwórz '{{name}}'"
@@ -38,18 +41,14 @@
       "btnAdd": "Dodaj typ ID",
       "newTypeName": "Nowy"
     },
-    "idRegistry": {
-      "heading": "Rejestr ID",
-      "rebuild": {
-        "name": "Przebuduj indeks",
-        "desc": "Przeskanuj vault w poszukiwaniu istniejących ID i zaktualizuj pamięć podręczną — uruchom po ręcznym tworzeniu plików.",
-        "btn": "Przebuduj",
-        "notice": "Indeks ID przebudowany."
-      }
-    },
     "idType": {
       "unnamed": "(nienazwany)",
       "tooltipRemove": "Usuń",
+      "confirmRemove": {
+        "title": "Usunąć typ ID?",
+        "message": "Czy na pewno usunąć typ ID „{{name}}” wraz z ustawieniami? Tej operacji nie można cofnąć.",
+        "btnConfirm": "Usuń"
+      },
       "name": {
         "label": "Nazwa",
         "desc": "Nazwa wyświetlana, np. \"osoba\" lub \"zdarzenie\""

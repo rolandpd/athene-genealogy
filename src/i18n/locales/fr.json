@@ -1,4 +1,7 @@
 {
+  "confirm": {
+    "cancel": "Annuler"
+  },
   "cmd": {
     "newFile": "Créer un nouveau fichier...",
     "newType": "Créer '{{name}}'"
@@ -38,18 +41,14 @@
       "btnAdd": "Ajouter un type d'ID",
       "newTypeName": "Nouveau"
     },
-    "idRegistry": {
-      "heading": "Registre des ID",
-      "rebuild": {
-        "name": "Reconstruire l'index",
-        "desc": "Analyser le coffre pour les ID existants et mettre à jour le cache — à exécuter après la création manuelle de fichiers.",
-        "btn": "Reconstruire",
-        "notice": "Index des ID reconstruit."
-      }
-    },
     "idType": {
       "unnamed": "(sans nom)",
       "tooltipRemove": "Supprimer",
+      "confirmRemove": {
+        "title": "Supprimer le type d'ID ?",
+        "message": "Supprimer vraiment le type d'ID « {{name}} » et ses paramètres ? Cette action est irréversible.",
+        "btnConfirm": "Supprimer"
+      },
       "name": {
         "label": "Nom",
         "desc": "Nom d'affichage, p. ex. \"personne\" ou \"événement\""

@@ -1,9 +1,9 @@
-import { App, Notice, PluginSettingTab, Setting } from 'obsidian';
+import { App, PluginSettingTab, Setting } from 'obsidian';
 import type AtheneGenealogyPlugin from './main';
-import { parseMask } from './types';
 import type { IdTypeConfig } from './types';
 import { FileSuggest, FolderSuggest } from './suggest';
 import { t } from './i18n';
+import { ConfirmModal } from './modal/ConfirmModal';
 
 export type { AthenePluginSettings } from './types';
 export { DEFAULT_SETTINGS } from './types';
@@ -54,19 +54,6 @@ export class AtheneGenealogySettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 					this.display();
 				}));
-
-		// ── ID registry ────────────────────────────────────────────────────
-		new Setting(containerEl).setName(t('settings.idRegistry.heading')).setHeading();
-
-		new Setting(containerEl)
-			.setName(t('settings.idRegistry.rebuild.name'))
-			.setDesc(t('settings.idRegistry.rebuild.desc'))
-			.addButton(btn => btn
-				.setButtonText(t('settings.idRegistry.rebuild.btn'))
-				.onClick(async () => {
-					await this.plugin.registry?.rebuildAll();
-					new Notice(t('settings.idRegistry.rebuild.notice'));
-				}));
 	}
 
 	// ── Single ID type ────────────────────────────────────────────────────
@@ -83,12 +70,22 @@ export class AtheneGenealogySettingTab extends PluginSettingTab {
 				.setIcon('trash')
 				.setTooltip(t('settings.idType.tooltipRemove'))
 				.setWarning()
-				.onClick(async () => {
-					const { prefix } = parseMask(type.mask);
-					this.plugin.settings.idTypes.splice(index, 1);
-					delete this.plugin.settings.idCache[prefix];
-					await this.plugin.saveSettings();
-					this.display();
+				.onClick(() => {
+					const name = type.name || t('settings.idType.unnamed');
+					new ConfirmModal(
+						this.app,
+						t('settings.idType.confirmRemove.title'),
+						t('settings.idType.confirmRemove.message', { name }),
+						t('settings.idType.confirmRemove.btnConfirm'),
+						async () => {
+							// Typ per Referenz suchen — der Index kann sich inzwischen verschoben haben
+							const idx = this.plugin.settings.idTypes.indexOf(type);
+							if (idx < 0) return;
+							this.plugin.settings.idTypes.splice(idx, 1);
+							await this.plugin.saveSettings();
+							this.display();
+						},
+					).open();
 				}));
 
 		new Setting(div)

@@ -1,4 +1,4 @@
-import { App, BasesView, Keymap, QueryController } from 'obsidian';
+import { App, BasesEntry, BasesPropertyId, BasesView, Keymap, QueryController, Value, sanitizeHTMLToDom } from 'obsidian';
 
 export const ZEITLEISTE_VIEW_TYPE = 'athene-zeitleiste';
 
@@ -19,12 +19,13 @@ const CSS = `
 .ztl-event {
   position: relative;
   padding: 2px 0 8px 0;
+  background-color: var(--color-accent);
 }
 .ztl-event::before {
   content: '';
   position: absolute;
   left: -21px;
-  top: 4px;
+  top: 10px;
   width: 12px;
   height: 12px;
   border-radius: 50%;
@@ -86,23 +87,35 @@ const CSS = `
 .ztl-sub .zt-sep { color: var(--text-faint); margin: 0 0.2em; }
 `;
 
+/** Value subclasses like ListValue/StringValue expose isEmpty(); the base class doesn't. */
+interface EmptyCheckable {
+	isEmpty(): boolean;
+}
+
+function isEmptyCheckable(v: Value): v is Value & EmptyCheckable {
+	return 'isEmpty' in v && typeof v.isEmpty === 'function';
+}
+
 export class AtheneZeitleisteView extends BasesView {
 	readonly type = ZEITLEISTE_VIEW_TYPE;
 
 	private containerEl: HTMLElement;
 	private readonly obsApp: App;
-	private styleEl: HTMLStyleElement | null = null;
+	private styleSheet: CSSStyleSheet | null = null;
 
 	constructor(controller: QueryController, parentEl: HTMLElement, app: App) {
 		super(controller);
 		this.obsApp = app;
 		this.containerEl = parentEl.createDiv('ztl');
-		this.styleEl = document.head.createEl('style', { text: CSS });
+		this.styleSheet = new CSSStyleSheet();
+		this.styleSheet.replaceSync(CSS);
+		document.adoptedStyleSheets = [...document.adoptedStyleSheets, this.styleSheet];
 	}
 
 	onunload(): void {
-		this.styleEl?.remove();
-		this.styleEl = null;
+		const sheet = this.styleSheet;
+		if (sheet) document.adoptedStyleSheets = document.adoptedStyleSheets.filter((s) => s !== sheet);
+		this.styleSheet = null;
 	}
 
 	public onDataUpdated(): void {
@@ -120,17 +133,15 @@ export class AtheneZeitleisteView extends BasesView {
 		);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	private getStr(entry: any, key: string): string {
+	private getStr(entry: BasesEntry, key: BasesPropertyId): string {
 		const v = entry.getValue(key);
 		if (v == null) return '';
-		if (typeof v.isEmpty === 'function') return v.isEmpty() ? '' : v.toString();
+		if (isEmptyCheckable(v)) return v.isEmpty() ? '' : v.toString();
 		const s = String(v);
 		return s === 'null' || s === 'undefined' ? '' : s;
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	private renderEntry(entry: any): void {
+	private renderEntry(entry: BasesEntry): void {
 		const datumPad     = this.getStr(entry, 'formula.DatumPad');
 		const typeRaw      = this.getStr(entry, 'formula.Ereignistyp');
 		const typeName     = typeRaw ? typeRaw.replace(/^.*\//, '').replace(/\.md$/, '') : '';
@@ -179,7 +190,7 @@ export class AtheneZeitleisteView extends BasesView {
 		// Second line: persons / description (rendered as HTML)
 		if (beschreibung) {
 			const subEl = eventEl.createDiv({ cls: 'ztl-sub' });
-			subEl.innerHTML = beschreibung;
+			subEl.appendChild(sanitizeHTMLToDom(beschreibung));
 		}
 	}
 }

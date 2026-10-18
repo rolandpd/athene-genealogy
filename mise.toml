@@ -1,0 +1,32 @@
+# Toolchain und Aufgaben für athene-genealogy.
+# bun ist Paketmanager und Skript-Runner; node bleibt für Werkzeuge
+# mit Node-Shebang (tsc, eslint, vitest) und für Parität mit Obsidian/Electron.
+[tools]
+bun = "1.4"
+node = "22"
+
+[tasks.install]
+description = "Abhängigkeiten installieren"
+run = "bun install"
+
+[tasks.dev]
+description = "Watch-Build in den Dev-Vault"
+run = "bun run dev"
+
+[tasks.build]
+description = "Typprüfung + Produktions-Build (main.js)"
+run = "bun run build"
+
+[tasks.check]
+description = "Übersetzungen, Lint und Tests"
+run = ["bun run check-i18n", "bun run lint", "bun run test"]
+
+[tasks.release]
+description = "Neue Version bauen, taggen und pushen: mise run release <patch|minor|major|x.y.z>"
+usage = 'arg "<bump>" help="patch, minor, major oder eine konkrete Version"'
+run = "bun scripts/release.ts {{usage.bump}}"
+
+[tasks."release:dry"]
+description = "Release durchspielen, ohne etwas zu ändern"
+usage = 'arg "<bump>" default="patch"'
+run = "bun scripts/release.ts {{usage.bump}} --dry-run"
