@@ -45,6 +45,28 @@ export class AtheneGenealogySettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
+			.setName(t('settings.gedcom.referenceSource.name'))
+			.setDesc(t('settings.gedcom.referenceSource.desc'))
+			.addText(text => text
+				.setValue(this.plugin.settings.gedcomReferenceSource)
+				.setPlaceholder('S00239')
+				.onChange(async val => {
+					this.plugin.settings.gedcomReferenceSource = val.trim().toUpperCase();
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName(t('settings.gedcom.familyType.name'))
+			.setDesc(t('settings.gedcom.familyType.desc'))
+			.addText(text => text
+				.setValue(this.plugin.settings.gedcomFamilyType)
+				.setPlaceholder('Familie')
+				.onChange(async val => {
+					this.plugin.settings.gedcomFamilyType = val.trim() || 'Familie';
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
 			.setName(t('settings.gedcom.report.name'))
 			.setDesc(t('settings.gedcom.report.desc'))
 			.addText(text => text

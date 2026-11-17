@@ -4,6 +4,8 @@ import { type VaultEvent, type VaultFamily, type VaultModel, type VaultPerson, n
 const asArray = (v: unknown): unknown[] => (v == null ? [] : Array.isArray(v) ? v : [v]);
 const tagsOf = (fm: FrontMatterCache): string[] => asArray(fm.tags).map(String);
 const hasTag = (tags: string[], root: string) => tags.some(t => t === root || t.startsWith(root + '/'));
+/** "[[Klärungsbedarf|🔴]]" → "Klärungsbedarf" */
+const linkTarget = (v: unknown): string | undefined => (typeof v === 'string' ? parseWikilink(v)?.target : undefined);
 const str = (v: unknown): string | undefined => (typeof v === 'string' && v.trim() ? v.trim() : typeof v === 'number' ? String(v) : undefined);
 
 /**
@@ -26,7 +28,6 @@ export function collectVaultModel(app: App, exclude: Set<string> = new Set()): V
 		const tags = tagsOf(fm);
 
 		if (hasTag(tags, 'Personen')) {
-			const exportRaw: unknown = fm['Export'];
 			const person: VaultPerson = {
 				path: file.path,
 				basename: file.basename,
@@ -35,8 +36,8 @@ export function collectVaultModel(app: App, exclude: Set<string> = new Set()): V
 				uuid: str(fm['uuid']),
 				sex: str(fm['Geschlecht']),
 				privacy: str(fm['Datenschutz']),
-				exportFlag: typeof exportRaw === 'boolean' ? exportRaw : undefined,
-				gedbasRefs: asArray(fm['refs']).map(String).filter(r => r.includes('gedbas')),
+				xrefs: asArray(fm['xrefs']).map(v => String(v).trim()).filter(Boolean),
+				status: linkTarget(fm['status']),
 			};
 			model.persons.set(file.path, person);
 		} else if (hasTag(tags, 'Ereignisse')) {
@@ -48,6 +49,7 @@ export function collectVaultModel(app: App, exclude: Set<string> = new Set()): V
 				father: resolve(fm['Vater'], file),
 				mother: resolve(fm['Mutter'], file),
 				date: str(fm['Datum']),
+				status: linkTarget(fm['status']),
 			};
 			model.events.push(event);
 		} else if (hasTag(tags, 'Familien')) {

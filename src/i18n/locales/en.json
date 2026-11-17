@@ -6,7 +6,8 @@
     "newFile": "Create new file...",
     "newType": "Create new '{{name}}'",
     "gedcomReport": "Create GEDCOM check report",
-    "assignUids": "Assign missing UIDs to persons"
+    "assignUids": "Assign missing UIDs to persons",
+    "createFamilies": "Create missing family records"
   },
   "modal": {
     "title": "Create new '{{name}}'",
@@ -96,6 +97,14 @@
       "livingYears": {
         "name": "Living person threshold (years)",
         "desc": "Persons without a death event who were born more recently are treated as living and are not exported."
+      },
+      "referenceSource": {
+        "name": "Reference source ID",
+        "desc": "Source record of the reference database (e.g. S00239). Persons with \"xrefs: - S00239:<id>\" are matched to that record directly."
+      },
+      "familyType": {
+        "name": "ID type for families",
+        "desc": "Name of the ID type used to create family records."
       }
     }
   },
@@ -105,7 +114,10 @@
   "gedcom": {
     "reportCreated": "GEDCOM check report created ({{count}} persons in export scope)",
     "reportFailed": "GEDCOM check report failed, see console",
-    "referenceMissing": "Reference GEDCOM not found: {{path}}"
+    "referenceMissing": "Reference GEDCOM not found: {{path}}",
+    "refresh": "Check again",
+    "checkedAt": "As of {{time}}",
+    "unknownCheck": "Unknown check “{{name}}”. Available: {{names}}"
   },
   "uid": {
     "noneMissing": "All notes tagged #{{tag}} already have a UID.",
@@ -114,6 +126,16 @@
       "title": "Assign UIDs",
       "message": "{{count}} notes tagged #{{tag}} have no valid UID. Write a new UID into the property \"{{property}}\" of each?",
       "btnConfirm": "Assign UIDs"
+    }
+  },
+  "family": {
+    "typeMissing": "ID type \"{{name}}\" for families not found (see GEDCOM settings).",
+    "nothingToDo": "All families in export scope already have a record and a UID.",
+    "done": "{{created}} family records created, {{complete}} completed, {{uuid}} UIDs added.",
+    "confirm": {
+      "title": "Create family records",
+      "message": "{{missing}} parent couples in the export scope have no family record yet, {{complete}} existing family records lack the second parent, {{uuid}} existing family records have no UID. Create, complete and add the UIDs?",
+      "btnConfirm": "Create"
     }
   }
 }

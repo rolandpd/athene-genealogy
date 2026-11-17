@@ -6,7 +6,8 @@
     "newFile": "Crear nove file...",
     "newType": "Crear '{{name}}'",
     "gedcomReport": "Crear reporto de controlo GEDCOM",
-    "assignUids": "Assignar UID mancante a personas"
+    "assignUids": "Assignar UID mancante a personas",
+    "createFamilies": "Crear registros de familia mancante"
   },
   "modal": {
     "title": "Crear '{{name}}'",
@@ -96,6 +97,14 @@
       "livingYears": {
         "name": "Limite pro personas vivente (annos)",
         "desc": "Personas sin morte nate plus recentemente es considerate vivente e non es exportate."
+      },
+      "referenceSource": {
+        "name": "ID del fonte de referentia",
+        "desc": "Registro de fonte del base de referentia (p. ex. S00239). Personas con \"xrefs: - S00239:<id>\" es associate directemente."
+      },
+      "familyType": {
+        "name": "Typo de ID pro familias",
+        "desc": "Nomine del typo de ID usate pro crear registros de familia."
       }
     }
   },
@@ -105,7 +114,10 @@
   "gedcom": {
     "reportCreated": "Reporto de controlo GEDCOM create ({{count}} personas pro exportation)",
     "reportFailed": "Reporto de controlo GEDCOM falleva, vide le consola",
-    "referenceMissing": "GEDCOM de referentia non trovate: {{path}}"
+    "referenceMissing": "GEDCOM de referentia non trovate: {{path}}",
+    "refresh": "Verificar de novo",
+    "checkedAt": "Stato: {{time}}",
+    "unknownCheck": "Verification incognite “{{name}}”. Disponibile: {{names}}"
   },
   "uid": {
     "noneMissing": "Tote le notas con #{{tag}} ha jam un UID.",
@@ -114,6 +126,16 @@
       "title": "Assignar UID",
       "message": "{{count}} notas con #{{tag}} non ha un UID valide. Scriber un nove UID in le proprietate \"{{property}}\" de cata una?",
       "btnConfirm": "Assignar"
+    }
+  },
+  "family": {
+    "typeMissing": "Typo de ID \"{{name}}\" pro familias non trovate (vide le configurationes GEDCOM).",
+    "nothingToDo": "Tote le familias a exportar ha jam un registro e un UID.",
+    "done": "{{created}} registros de familia create, {{complete}} completate, {{uuid}} UID addite.",
+    "confirm": {
+      "title": "Crear registros de familia",
+      "message": "{{missing}} parés de parentes a exportar non ha ancora un registro de familia, a {{complete}} registros existente manca le secunde parente, {{uuid}} registros existente non ha UID. Crear, completar e adder le UID?",
+      "btnConfirm": "Crear"
     }
   }
 }

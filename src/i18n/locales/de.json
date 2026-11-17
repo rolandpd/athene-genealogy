@@ -6,7 +6,8 @@
     "newFile": "Erstelle neue Datei…",
     "newType": "Erstelle '{{name}}'",
     "gedcomReport": "GEDCOM-Prüfbericht erstellen",
-    "assignUids": "Fehlende UIDs für Personen vergeben"
+    "assignUids": "Fehlende UIDs für Personen vergeben",
+    "createFamilies": "Fehlende Familien-Datensätze anlegen"
   },
   "modal": {
     "title": "Erstelle '{{name}}'",
@@ -96,6 +97,14 @@
       "livingYears": {
         "name": "Grenze für lebende Personen (Jahre)",
         "desc": "Personen ohne Sterbeereignis, die später geboren sind, gelten als lebend und werden nicht exportiert."
+      },
+      "referenceSource": {
+        "name": "Quellen-ID der Referenz",
+        "desc": "Quellen-Datensatz der Referenzdatenbank (z. B. S00239). Personen mit „xrefs: - S00239:<ID>“ werden diesem Eintrag direkt zugeordnet."
+      },
+      "familyType": {
+        "name": "ID-Typ für Familien",
+        "desc": "Name des ID-Typs, mit dem Familien-Datensätze angelegt werden."
       }
     }
   },
@@ -105,7 +114,10 @@
   "gedcom": {
     "reportCreated": "GEDCOM-Prüfbericht erstellt ({{count}} Personen im Export-Umfang)",
     "reportFailed": "GEDCOM-Prüfbericht fehlgeschlagen, siehe Konsole",
-    "referenceMissing": "Referenz-GEDCOM nicht gefunden: {{path}}"
+    "referenceMissing": "Referenz-GEDCOM nicht gefunden: {{path}}",
+    "refresh": "Neu prüfen",
+    "checkedAt": "Stand: {{time}}",
+    "unknownCheck": "Unbekannte Prüfung „{{name}}“. Möglich: {{names}}"
   },
   "uid": {
     "noneMissing": "Alle Notizen mit #{{tag}} haben bereits eine UID.",
@@ -114,6 +126,16 @@
       "title": "UIDs vergeben",
       "message": "{{count}} Notizen mit #{{tag}} haben keine gültige UID. Jeweils eine neue UID in das Property „{{property}}“ schreiben?",
       "btnConfirm": "UIDs vergeben"
+    }
+  },
+  "family": {
+    "typeMissing": "ID-Typ „{{name}}“ für Familien nicht gefunden (siehe GEDCOM-Einstellungen).",
+    "nothingToDo": "Alle Familien im Export-Umfang haben bereits einen Datensatz und eine UID.",
+    "done": "{{created}} Familien-Datensätze angelegt, {{complete}} ergänzt, {{uuid}} UIDs vergeben.",
+    "confirm": {
+      "title": "Familien-Datensätze anlegen",
+      "message": "{{missing}} Elternpaare im Export-Umfang haben noch keinen Familien-Datensatz, bei {{complete}} vorhandenen Familien fehlt der zweite Elternteil, {{uuid}} vorhandene Familien haben keine UID. Anlegen, ergänzen und UIDs vergeben?",
+      "btnConfirm": "Anlegen"
     }
   }
 }

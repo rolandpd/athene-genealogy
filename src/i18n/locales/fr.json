@@ -6,7 +6,8 @@
     "newFile": "Créer un nouveau fichier...",
     "newType": "Créer '{{name}}'",
     "gedcomReport": "Créer le rapport de contrôle GEDCOM",
-    "assignUids": "Attribuer les UID manquants aux personnes"
+    "assignUids": "Attribuer les UID manquants aux personnes",
+    "createFamilies": "Créer les fiches familiales manquantes"
   },
   "modal": {
     "title": "Créer '{{name}}'",
@@ -96,6 +97,14 @@
       "livingYears": {
         "name": "Seuil des personnes vivantes (années)",
         "desc": "Les personnes sans décès nées plus récemment sont considérées comme vivantes et ne sont pas exportées."
+      },
+      "referenceSource": {
+        "name": "ID de source de référence",
+        "desc": "Fiche source de la base de référence (p. ex. S00239). Les personnes avec « xrefs: - S00239:<id> » y sont associées directement."
+      },
+      "familyType": {
+        "name": "Type d’ID pour les familles",
+        "desc": "Nom du type d’ID utilisé pour créer les fiches familiales."
       }
     }
   },
@@ -105,7 +114,10 @@
   "gedcom": {
     "reportCreated": "Rapport de contrôle GEDCOM créé ({{count}} personnes à exporter)",
     "reportFailed": "Échec du rapport de contrôle GEDCOM, voir la console",
-    "referenceMissing": "GEDCOM de référence introuvable : {{path}}"
+    "referenceMissing": "GEDCOM de référence introuvable : {{path}}",
+    "refresh": "Vérifier à nouveau",
+    "checkedAt": "État : {{time}}",
+    "unknownCheck": "Vérification inconnue « {{name}} ». Disponibles : {{names}}"
   },
   "uid": {
     "noneMissing": "Toutes les notes avec #{{tag}} ont déjà un UID.",
@@ -114,6 +126,16 @@
       "title": "Attribuer des UID",
       "message": "{{count}} notes avec #{{tag}} n’ont pas d’UID valide. Écrire un nouvel UID dans la propriété « {{property}} » de chacune ?",
       "btnConfirm": "Attribuer"
+    }
+  },
+  "family": {
+    "typeMissing": "Type d’ID « {{name}} » pour les familles introuvable (voir les réglages GEDCOM).",
+    "nothingToDo": "Toutes les familles à exporter ont déjà une fiche et un UID.",
+    "done": "{{created}} fiches familiales créées, {{complete}} complétées, {{uuid}} UID ajoutés.",
+    "confirm": {
+      "title": "Créer des fiches familiales",
+      "message": "{{missing}} couples de parents à exporter n’ont pas encore de fiche familiale, {{complete}} fiches existantes n’ont qu’un parent, {{uuid}} fiches existantes n’ont pas d’UID. Créer, compléter et ajouter les UID ?",
+      "btnConfirm": "Créer"
     }
   }
 }

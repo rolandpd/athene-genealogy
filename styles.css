@@ -69,3 +69,17 @@
 	text-decoration: underline;
 	cursor: pointer;
 }
+
+/* ── Codeblock athene-pruefung ─────────────────────────────────────────────── */
+
+.athene-check-bar {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 4px;
+}
+
+.athene-check-stamp {
+	font-size: var(--font-ui-small);
+	color: var(--text-muted);
+}

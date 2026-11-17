@@ -30,7 +30,7 @@ describe('UID', () => {
 	});
 
 	it('findet doppelte und ungültige UIDs', () => {
-		const p = (path: string, uuid?: string): [string, VaultPerson] => [path, { path, basename: path, kekule: false, gedbasRefs: [], uuid }];
+		const p = (path: string, uuid?: string): [string, VaultPerson] => [path, { path, basename: path, kekule: false, xrefs: [], uuid }];
 		const model: VaultModel = {
 			persons: new Map([p('a', 'df1621d5fa7d9408553ade253ce269184089'), p('b', 'DF1621D5FA7D9408553ADE253CE269184089'), p('c', 'xyz'), p('d')]),
 			events: [],

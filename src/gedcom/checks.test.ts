@@ -4,7 +4,7 @@ import { readGedcomIndividuals } from './gedcomReader';
 import { normalizeEventType, type VaultEvent, type VaultModel, type VaultPerson } from './model';
 
 function person(path: string, extra: Partial<VaultPerson> = {}): VaultPerson {
-	return { path, basename: path.replace(/\.md$/, ''), kekule: false, gedbasRefs: [], ...extra };
+	return { path, basename: path.replace(/\.md$/, ''), kekule: false, xrefs: [], ...extra };
 }
 function event(path: string, type: string, persons: string[], date?: string, extra: Partial<VaultEvent> = {}): VaultEvent {
 	return { path, basename: path, type, persons, date, ...extra };
@@ -58,7 +58,7 @@ describe('Export-Umfang', () => {
 			person('mutter.md', { sex: 'F' }),
 			person('lebend.md', { sex: 'F' }),
 			person('fremd.md', { sex: 'F' }),
-			person('gesperrt.md', { sex: 'M', exportFlag: false }),
+			person('gesperrt.md', { sex: 'M', privacy: '[[Privat]]' }),
 		],
 		[
 			event('E1', 'Geburt', ['kind.md'], '[[1900-01-01|01.01.1900]]', { father: 'vater.md', mother: 'mutter.md' }),
@@ -73,7 +73,7 @@ describe('Export-Umfang', () => {
 		const scope = computeScope(m, rel, [], OPTS);
 		expect([...scope.included].sort()).toEqual(['kind.md', 'mutter.md', 'vater.md']);
 		expect(scope.living).toEqual(['lebend.md']);
-		expect(scope.excludedByFlag).toEqual(['gesperrt.md']);
+		expect(scope.excludedByPrivacy).toEqual(['gesperrt.md']);
 		expect(scope.unknownLiving.sort()).toEqual(['mutter.md', 'vater.md']);
 	});
 
@@ -136,10 +136,18 @@ describe('GEDCOM-Abgleich', () => {
 		expect(matches.every(x => x.person === undefined && x.candidates.length === 1)).toBe(true);
 	});
 
-	it('meldet fehlende GEDBAS-Links', () => {
+	it('meldet fehlende GEDBAS-IDs in xrefs', () => {
 		const m = model([person('Baumann, Anna Maria I0002.md', { kekule: true, uuid: 'cf502118db07f43b795d3f4923bde5de08c0' })], []);
-		const r = runChecks(m, OPTS, readGedcomIndividuals(ged));
+		const r = runChecks(m, { ...OPTS, referenceSource: 'S00239' }, readGedcomIndividuals(ged));
 		expect(r.reference?.missingRef).toHaveLength(1);
+	});
+
+	it('Datenschutz geht vor Bestandsschutz', () => {
+		const m = model([person('Baumann, Anna Maria I0002.md', { uuid: 'cf502118db07f43b795d3f4923bde5de08c0', privacy: '[[Privat]]' })], []);
+		const r = runChecks(m, OPTS, readGedcomIndividuals(ged));
+		expect(r.scope.included.has('Baumann, Anna Maria I0002.md')).toBe(false);
+		expect(r.reference?.dropped).toEqual([]);
+		expect(r.reference?.removedByPrivacy).toEqual(['Baumann, Anna Maria I0002.md']);
 	});
 
 	it('normalisiert Namen unabhängig von der Schreibweise', () => {
@@ -161,5 +169,50 @@ describe('Plausibilität', () => {
 		const kinds = runChecks(m, OPTS).plausibility.map(i => i.kind);
 		expect(kinds).toContain('marriageTooYoung');
 		expect(kinds).toContain('parentDead');
+	});
+});
+
+describe('Lebend-Regel und Datenschutz', () => {
+	it('meldet fehlende und widersprüchliche Lebend-Markierungen', () => {
+		const m = model(
+			[
+				person('jung.md'),
+				person('markiert.md', { privacy: '[[Lebend]]' }),
+				person('tot.md', { privacy: '[[Lebend]]' }),
+				person('alt.md', { privacy: '[[Lebend]]' }),
+			],
+			[
+				event('E1', 'Geburt', ['jung.md'], '[[1960|1960]]'),
+				event('E2', 'Geburt', ['markiert.md'], '[[1970|1970]]'),
+				event('E3', 'Tod', ['tot.md']),
+				event('E4', 'Geburt', ['alt.md'], '[[1900|1900]]'),
+			],
+		);
+		const r = runChecks(m, OPTS);
+		expect(r.living).toEqual({ missingMark: ['jung.md'], markedButDead: ['tot.md'], markedButOld: ['alt.md'] });
+	});
+
+	it('lässt explizit als Lebend markierte Personen aus', () => {
+		const m = model([person('x.md', { kekule: true, privacy: '[[Lebend]]' })], []);
+		const scope = computeScope(m, buildRelations(m), [], OPTS);
+		expect(scope.living).toEqual(['x.md']);
+		expect(scope.included.size).toBe(0);
+	});
+});
+
+describe('Plausibilität und Bearbeitungsstatus', () => {
+	it('ordnet Fälle nach dem Status der beteiligten Ereignisse ein', () => {
+		const m = model(
+			[person('vater.md'), person('kind.md'), person('mutter.md'), person('kind2.md')],
+			[
+				event('E1', 'Geburt', ['vater.md'], '[[1771|1771]]'),
+				event('E2', 'Geburt', ['kind.md'], '[[1832|1832]]', { father: 'vater.md', status: 'Konsolidiert' }),
+				event('E3', 'Tod', ['mutter.md'], '[[1760|1760]]', { status: 'Klärungsbedarf' }),
+				event('E4', 'Geburt', ['kind2.md'], '[[1762|1762]]', { mother: 'mutter.md' }),
+			],
+		);
+		const issues = runChecks(m, OPTS).plausibility;
+		expect(issues.find(i => i.kind === 'parentAge')).toMatchObject({ state: 'reviewed', events: ['E2', 'E1'] });
+		expect(issues.find(i => i.kind === 'parentDead')).toMatchObject({ state: 'known', events: ['E4', 'E3'] });
 	});
 });

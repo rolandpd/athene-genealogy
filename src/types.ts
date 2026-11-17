@@ -31,6 +31,10 @@ export interface AthenePluginSettings {
 	idTypes: IdTypeConfig[];
 	/** GEDCOM-Datei im Vault, mit der abgeglichen wird (z. B. GEDBAS-Reexport) */
 	gedcomReferencePath: string;
+	/** Quellen-ID der Referenzdatenbank für `xrefs` (z. B. "S00239") */
+	gedcomReferenceSource: string;
+	/** ID-Typ (Name), mit dem Familien-Datensätze angelegt werden */
+	gedcomFamilyType: string;
 	/** Zielnotiz für den Prüfbericht */
 	gedcomReportPath: string;
 	/** Personen ohne Tod, die jünger sind, gelten als lebend */
@@ -41,6 +45,8 @@ export const DEFAULT_SETTINGS: AthenePluginSettings = {
 	locale: 'de',
 	idTypes: [],
 	gedcomReferencePath: '',
+	gedcomReferenceSource: '',
+	gedcomFamilyType: 'Familie',
 	gedcomReportPath: 'GEDCOM-Prüfbericht.md',
 	gedcomLivingYears: 100,
 };

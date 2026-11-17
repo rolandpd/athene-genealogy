@@ -1,7 +1,7 @@
 import { Notice, TFile, moment, normalizePath, type App } from 'obsidian';
 import type { AthenePluginSettings } from '../types';
 import { t } from '../i18n';
-import { runChecks } from './checks';
+import { runChecks, type CheckResult } from './checks';
 import { collectVaultModel } from './collect';
 import { readGedcomIndividuals } from './gedcomReader';
 import type { GedcomIndividual } from './model';
@@ -14,8 +14,11 @@ export function templatePaths(settings: AthenePluginSettings): Set<string> {
 	return new Set(settings.idTypes.flatMap(type => type.templates).filter(Boolean).map(p => normalizePath(p)));
 }
 
-/** Erstellt den GEDCOM-Prüfbericht und öffnet ihn. */
-export async function createGedcomReport(app: App, settings: AthenePluginSettings): Promise<void> {
+/**
+ * Liest Vault und Referenz-GEDCOM und führt alle Prüfungen aus.
+ * Gemeinsame Grundlage für Prüfbericht und Familien-Command, damit beide denselben Umfang sehen.
+ */
+export async function runVaultChecks(app: App, settings: AthenePluginSettings): Promise<{ result: CheckResult; refPath: string; hasReference: boolean }> {
 	let reference: GedcomIndividual[] | undefined;
 	const refPath = settings.gedcomReferencePath ? normalizePath(settings.gedcomReferencePath) : '';
 	if (refPath) {
@@ -25,15 +28,25 @@ export async function createGedcomReport(app: App, settings: AthenePluginSetting
 			new Notice(t('gedcom.referenceMissing', { path: refPath }));
 		}
 	}
-
 	const result = runChecks(
 		collectVaultModel(app, templatePaths(settings)),
-		{ currentYear: new Date().getFullYear(), livingYears: settings.gedcomLivingYears },
+		{
+			currentYear: new Date().getFullYear(),
+			livingYears: settings.gedcomLivingYears,
+			referenceSource: settings.gedcomReferenceSource || undefined,
+		},
 		reference,
 	);
+	return { result, refPath, hasReference: !!reference };
+}
+
+/** Erstellt den GEDCOM-Prüfbericht und öffnet ihn. */
+export async function createGedcomReport(app: App, settings: AthenePluginSettings): Promise<void> {
+	const { result, refPath, hasReference } = await runVaultChecks(app, settings);
 	const markdown = renderReport(result, {
 		created: moment().format('DD.MM.YYYY HH:mm'),
-		referencePath: reference ? refPath : undefined,
+		referencePath: hasReference ? refPath : undefined,
+		referenceSource: settings.gedcomReferenceSource || undefined,
 		gedbasPersonUrl: GEDBAS_PERSON_URL,
 	});
 

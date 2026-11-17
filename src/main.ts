@@ -1,6 +1,8 @@
 import { Notice, Plugin, TFile } from 'obsidian';
 import { createGedcomReport, templatePaths } from './gedcom/reportCommand';
 import { assignMissingUids } from './gedcom/uidCommand';
+import { createMissingFamilies } from './gedcom/familyCommand';
+import { registerCheckBlock } from './gedcom/checkBlock';
 import { createUid } from './gedcom/uid';
 import { AtheneDate, type DateQualifier } from './date';
 import { AtheneGenealogySettingTab, DEFAULT_SETTINGS } from './settings';
@@ -112,6 +114,17 @@ export default class AtheneGenealogyPlugin extends Plugin {
 		});
 
 		this.addCommand({
+			id: 'create-families',
+			name: t('cmd.createFamilies'),
+			callback: () => {
+				void createMissingFamilies(this.app, this.registry, this.settings).catch((err: unknown) => {
+					console.error(err);
+					new Notice(t('gedcom.reportFailed'));
+				});
+			},
+		});
+
+		this.addCommand({
 			id: 'gedcom-report',
 			name: t('cmd.gedcomReport'),
 			callback: () => {
@@ -121,6 +134,8 @@ export default class AtheneGenealogyPlugin extends Plugin {
 				});
 			},
 		});
+
+		registerCheckBlock(this, () => this.settings);
 
 		this.addSettingTab(new AtheneGenealogySettingTab(this.app, this));
 	}

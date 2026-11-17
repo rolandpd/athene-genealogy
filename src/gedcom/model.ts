@@ -16,10 +16,10 @@ export interface VaultPerson {
 	sex?: string;
 	/** Rohwert des Datenschutz-Property, z. B. "[[Privat]]" */
 	privacy?: string;
-	/** Override aus dem Property `Export` (true/false), sonst undefined */
-	exportFlag?: boolean;
-	/** URLs aus `refs`, die auf GEDBAS zeigen */
-	gedbasRefs: string[];
+	/** Lookup-Referenzen aus `xrefs` im Format `QuelleID:ExterneID`, z. B. "S00239:1449005733" */
+	xrefs: string[];
+	/** Bearbeitungsstatus als Linkziel, z. B. "Klärungsbedarf" */
+	status?: string;
 }
 
 export interface VaultEvent {
@@ -33,6 +33,8 @@ export interface VaultEvent {
 	mother?: string;
 	/** Rohwert des Datum-Property, z. B. "[[1874-09-25|25.09.1874]]" */
 	date?: string;
+	/** Bearbeitungsstatus als Linkziel, z. B. "Klärungsbedarf" */
+	status?: string;
 }
 
 export interface VaultFamily {

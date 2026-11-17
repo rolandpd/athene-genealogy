@@ -6,7 +6,8 @@
     "newFile": "Utwórz nowy plik...",
     "newType": "Utwórz '{{name}}'",
     "gedcomReport": "Utwórz raport kontrolny GEDCOM",
-    "assignUids": "Nadaj brakujące UID osobom"
+    "assignUids": "Nadaj brakujące UID osobom",
+    "createFamilies": "Utwórz brakujące rekordy rodzin"
   },
   "modal": {
     "title": "Utwórz '{{name}}'",
@@ -96,6 +97,14 @@
       "livingYears": {
         "name": "Próg osób żyjących (lata)",
         "desc": "Osoby bez zgonu urodzone później są traktowane jako żyjące i nie są eksportowane."
+      },
+      "referenceSource": {
+        "name": "ID źródła referencyjnego",
+        "desc": "Rekord źródła bazy referencyjnej (np. S00239). Osoby z „xrefs: - S00239:<id>” są przypisywane bezpośrednio."
+      },
+      "familyType": {
+        "name": "Typ ID dla rodzin",
+        "desc": "Nazwa typu ID używanego do tworzenia rekordów rodzin."
       }
     }
   },
@@ -105,7 +114,10 @@
   "gedcom": {
     "reportCreated": "Utworzono raport kontrolny GEDCOM ({{count}} osób do eksportu)",
     "reportFailed": "Raport kontrolny GEDCOM nie powiódł się, zobacz konsolę",
-    "referenceMissing": "Nie znaleziono referencyjnego GEDCOM: {{path}}"
+    "referenceMissing": "Nie znaleziono referencyjnego GEDCOM: {{path}}",
+    "refresh": "Sprawdź ponownie",
+    "checkedAt": "Stan: {{time}}",
+    "unknownCheck": "Nieznane sprawdzenie „{{name}}”. Dostępne: {{names}}"
   },
   "uid": {
     "noneMissing": "Wszystkie notatki z #{{tag}} mają już UID.",
@@ -114,6 +126,16 @@
       "title": "Nadaj UID",
       "message": "{{count}} notatek z #{{tag}} nie ma prawidłowego UID. Zapisać nowy UID we właściwości „{{property}}” każdej z nich?",
       "btnConfirm": "Nadaj"
+    }
+  },
+  "family": {
+    "typeMissing": "Nie znaleziono typu ID „{{name}}” dla rodzin (zobacz ustawienia GEDCOM).",
+    "nothingToDo": "Wszystkie rodziny do eksportu mają już rekord i UID.",
+    "done": "Utworzono {{created}} rekordów rodzin, uzupełniono {{complete}}, dodano {{uuid}} UID.",
+    "confirm": {
+      "title": "Utwórz rekordy rodzin",
+      "message": "{{missing}} par rodziców do eksportu nie ma jeszcze rekordu rodziny, w {{complete}} istniejących rekordach brakuje drugiego rodzica, {{uuid}} istniejących rekordów nie ma UID. Utworzyć, uzupełnić i dodać UID?",
+      "btnConfirm": "Utwórz"
     }
   }
 }

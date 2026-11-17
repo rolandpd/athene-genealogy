@@ -1,4 +1,4 @@
-import { type GedcomIndividual, type VaultModel, parseWikilink, yearOfDateLink } from './model';
+import { type GedcomIndividual, type VaultEvent, type VaultModel, parseWikilink, yearOfDateLink } from './model';
 import { isValidUid } from './uid';
 
 export interface CheckOptions {
@@ -6,6 +6,16 @@ export interface CheckOptions {
 	currentYear: number;
 	/** Wer jünger ist und kein Sterbe-/Beisetzungsereignis hat, gilt als lebend */
 	livingYears: number;
+	/**
+	 * Quellen-ID der Referenzdatenbank (z. B. "S00239" für GEDBAS DB 67272).
+	 * Personen mit `xrefs: [S00239:<XREF ohne I>]` werden direkt zugeordnet.
+	 */
+	referenceSource?: string;
+}
+
+/** "I1449005733" → "S00239:1449005733" */
+export function referenceXref(source: string, xref: string): string {
+	return `${source}:${xref.replace(/^I/, '')}`;
 }
 
 export const BIRTH_TYPES = ['Geburt', 'Taufe'];
@@ -24,6 +34,8 @@ export interface Relations {
 	children: Map<string, Set<string>>;
 	spouses: Map<string, Set<string>>;
 	marriageYears: Map<string, number[]>;
+	/** Elternpaare je Geburts-/Elternschaftsereignis (Rolle aus dem Ereignis, nicht aus dem Geschlecht) */
+	parentPairs: { child: string; father?: string; mother?: string; type: string }[];
 }
 
 function add<K, V>(map: Map<K, Set<V>>, key: K, value: V) {
@@ -35,7 +47,7 @@ function add<K, V>(map: Map<K, Set<V>>, key: K, value: V) {
 export function buildRelations(model: VaultModel): Relations {
 	const rel: Relations = {
 		birthYear: new Map(), deathYear: new Map(), hasDeath: new Set(),
-		parents: new Map(), children: new Map(), spouses: new Map(), marriageYears: new Map(),
+		parents: new Map(), children: new Map(), spouses: new Map(), marriageYears: new Map(), parentPairs: [],
 	};
 	const isPerson = (p: string | undefined): p is string => !!p && model.persons.has(p);
 
@@ -55,6 +67,9 @@ export function buildRelations(model: VaultModel): Relations {
 					add(rel.parents, p, parent);
 					add(rel.children, parent, p);
 				}
+				const father = isPerson(e.father) ? e.father : undefined;
+				const mother = isPerson(e.mother) ? e.mother : undefined;
+				if (father || mother) rel.parentPairs.push({ child: p, father, mother, type: e.type });
 			}
 			if (MARRIAGE_TYPES.includes(e.type) && year !== undefined) {
 				rel.marriageYears.set(p, [...(rel.marriageYears.get(p) ?? []), year]);
@@ -74,7 +89,7 @@ export function buildRelations(model: VaultModel): Relations {
 export interface ReferenceMatch {
 	individual: GedcomIndividual;
 	person?: string;
-	via?: 'uid' | 'name';
+	via?: 'uid' | 'xref' | 'name';
 	candidates: string[];
 }
 
@@ -90,11 +105,13 @@ export function nameKey(name: string): string {
 		.join(' ');
 }
 
-export function matchReference(model: VaultModel, rel: Relations, individuals: GedcomIndividual[]): ReferenceMatch[] {
+export function matchReference(model: VaultModel, rel: Relations, individuals: GedcomIndividual[], source?: string): ReferenceMatch[] {
 	const byUid = new Map<string, string>();
+	const byXref = new Map<string, string>();
 	const byName = new Map<string, string[]>();
 	for (const p of model.persons.values()) {
 		if (p.uuid) byUid.set(p.uuid.toLowerCase(), p.path);
+		for (const x of p.xrefs) byXref.set(x, p.path);
 		const key = nameKey(p.basename);
 		byName.set(key, [...(byName.get(key) ?? []), p.path]);
 	}
@@ -102,6 +119,8 @@ export function matchReference(model: VaultModel, rel: Relations, individuals: G
 	const matches: ReferenceMatch[] = individuals.filter(g => !g.deleted).map(g => {
 		const uidHit = g.uid ? byUid.get(g.uid) : undefined;
 		if (uidHit) return { individual: g, person: uidHit, via: 'uid' as const, candidates: [uidHit] };
+		const xrefHit = source ? byXref.get(referenceXref(source, g.xref)) : undefined;
+		if (xrefHit) return { individual: g, person: xrefHit, via: 'xref' as const, candidates: [xrefHit] };
 
 		const year = Number(g.birthDate?.match(/\d{4}/)?.[0]) || undefined;
 		const sameName = byName.get(nameKey(g.name ?? '')) ?? [];
@@ -135,7 +154,8 @@ export interface Scope {
 	connected: Set<string>;
 	/** aus der Referenz übernommen (Bestandsschutz) */
 	protectedByReference: Set<string>;
-	excludedByFlag: string[];
+	/** per Datenschutz ausgeschlossen (Privat) */
+	excludedByPrivacy: string[];
 	living: string[];
 	/** weder Geburtsjahr noch Tod → Lebend-Regel nicht anwendbar */
 	unknownLiving: string[];
@@ -143,6 +163,35 @@ export interface Scope {
 
 export function isPrivate(privacy: string | undefined): boolean {
 	return !!privacy && /privat|privacy/i.test(privacy);
+}
+
+/** Datenschutz: [[Lebend]] */
+export function isLivingMark(privacy: string | undefined): boolean {
+	return !!privacy && /lebend/i.test(privacy);
+}
+
+export interface LivingCheck {
+	/** nach der Regel lebend, aber ohne Datenschutz [[Lebend]] */
+	missingMark: string[];
+	/** als [[Lebend]] markiert, aber Tod/Beisetzung erfasst */
+	markedButDead: string[];
+	/** als [[Lebend]] markiert, aber vor der Grenze geboren (möglich, aber prüfen) */
+	markedButOld: string[];
+}
+
+/** Vergleicht die berechnete Lebend-Regel mit dem Datenschutz-Literal — für alle Personen. */
+export function checkLiving(model: VaultModel, rel: Relations, opts: CheckOptions): LivingCheck {
+	const cutoff = opts.currentYear - opts.livingYears;
+	const result: LivingCheck = { missingMark: [], markedButDead: [], markedButOld: [] };
+	for (const p of model.persons.values()) {
+		const dead = rel.hasDeath.has(p.path);
+		const born = rel.birthYear.get(p.path);
+		const marked = isLivingMark(p.privacy);
+		if (!dead && born !== undefined && born > cutoff && !marked && !isPrivate(p.privacy)) result.missingMark.push(p.path);
+		if (marked && dead) result.markedButDead.push(p.path);
+		else if (marked && born !== undefined && born <= cutoff) result.markedButOld.push(p.path);
+	}
+	return result;
 }
 
 export function computeScope(model: VaultModel, rel: Relations, referenced: Iterable<string>, opts: CheckOptions): Scope {
@@ -157,12 +206,16 @@ export function computeScope(model: VaultModel, rel: Relations, referenced: Iter
 	const candidates = new Set([...connected, ...protectedByReference]);
 	const cutoff = opts.currentYear - opts.livingYears;
 
-	const scope: Scope = { included: new Set(), connected, protectedByReference, excludedByFlag: [], living: [], unknownLiving: [] };
+	const scope: Scope = { included: new Set(), connected, protectedByReference, excludedByPrivacy: [], living: [], unknownLiving: [] };
 	for (const p of candidates) {
 		const person = model.persons.get(p);
 		if (!person) continue;
-		if (person.exportFlag === false || isPrivate(person.privacy)) {
-			scope.excludedByFlag.push(p);
+		if (isPrivate(person.privacy)) {
+			scope.excludedByPrivacy.push(p);
+			continue;
+		}
+		if (isLivingMark(person.privacy)) {
+			scope.living.push(p);
 			continue;
 		}
 		if (!rel.hasDeath.has(p)) {
@@ -238,29 +291,55 @@ export interface PlausibilityIssue {
 	kind: 'deathBeforeBirth' | 'tooOld' | 'marriageTooYoung' | 'parentAge' | 'parentDead';
 	/** Zahl zur Erläuterung (Alter, Abstand, Jahr) */
 	value: number;
+	/** beteiligte Ereignisse — ihr Status entscheidet, ob der Fall offen, geprüft oder bekannt ist */
+	events: string[];
+	/** offen | geprüft (Status Konsolidiert) | bekannt (Status Klärungsbedarf) */
+	state: 'open' | 'reviewed' | 'known';
 }
 
+export const STATUS_KNOWN_PROBLEM = 'Klärungsbedarf';
+export const STATUS_REVIEWED = 'Konsolidiert';
+
 export function checkPlausibility(model: VaultModel, rel: Relations): PlausibilityIssue[] {
+	const byPerson = new Map<string, VaultEvent[]>();
+	for (const e of model.events) {
+		for (const p of new Set([...e.persons, e.father, e.mother].filter((x): x is string => !!x))) {
+			byPerson.set(p, [...(byPerson.get(p) ?? []), e]);
+		}
+	}
+	const eventsOf = (p: string, types: string[]) => (byPerson.get(p) ?? []).filter(e => types.includes(e.type) && e.persons.includes(p));
+	const parentEvents = (child: string, parent: string) =>
+		(byPerson.get(child) ?? []).filter(e => PARENT_TYPES.includes(e.type) && e.persons.includes(child) && (e.father === parent || e.mother === parent));
+	const stateOf = (person: string, events: VaultEvent[]): PlausibilityIssue['state'] => {
+		const statuses = [model.persons.get(person)?.status, ...events.map(e => e.status)];
+		if (statuses.includes(STATUS_KNOWN_PROBLEM)) return 'known';
+		if (statuses.includes(STATUS_REVIEWED)) return 'reviewed';
+		return 'open';
+	};
 	const issues: PlausibilityIssue[] = [];
+	const push = (person: string, kind: PlausibilityIssue['kind'], value: number, events: VaultEvent[], other?: string) =>
+		issues.push({ person, other, kind, value, events: events.map(e => e.path), state: stateOf(person, events) });
+
 	for (const p of model.persons.keys()) {
 		const b = rel.birthYear.get(p);
 		const d = rel.deathYear.get(p);
+		const lifeEvents = () => eventsOf(p, [...BIRTH_TYPES, ...DEATH_TYPES]);
 		if (b !== undefined && d !== undefined) {
-			if (d < b) issues.push({ person: p, kind: 'deathBeforeBirth', value: d });
-			else if (d - b > 105) issues.push({ person: p, kind: 'tooOld', value: d - b });
+			if (d < b) push(p, 'deathBeforeBirth', d, lifeEvents());
+			else if (d - b > 105) push(p, 'tooOld', d - b, lifeEvents());
 		}
 		for (const m of rel.marriageYears.get(p) ?? []) {
-			if (b !== undefined && m - b < 14) issues.push({ person: p, kind: 'marriageTooYoung', value: m - b });
+			if (b !== undefined && m - b < 14) push(p, 'marriageTooYoung', m - b, [...eventsOf(p, MARRIAGE_TYPES), ...eventsOf(p, BIRTH_TYPES)]);
 		}
 		for (const parent of rel.parents.get(p) ?? []) {
 			const pb = rel.birthYear.get(parent);
 			const pd = rel.deathYear.get(parent);
 			if (b !== undefined && pb !== undefined && (b - pb < 14 || b - pb > 60)) {
-				issues.push({ person: p, other: parent, kind: 'parentAge', value: b - pb });
+				push(p, 'parentAge', b - pb, [...parentEvents(p, parent), ...eventsOf(parent, BIRTH_TYPES)], parent);
 			}
 			// Vater darf bis zu einem Jahr vor der Geburt gestorben sein
 			if (b !== undefined && pd !== undefined && b > pd + 1) {
-				issues.push({ person: p, other: parent, kind: 'parentDead', value: pd });
+				push(p, 'parentDead', pd, [...parentEvents(p, parent), ...eventsOf(parent, DEATH_TYPES)], parent);
 			}
 		}
 	}
@@ -273,6 +352,8 @@ export interface FamilyCheck {
 	/** benötigte Paare: Vater/Mutter (eins davon kann fehlen) */
 	needed: { father?: string; mother?: string; family?: string }[];
 	missing: { father?: string; mother?: string }[];
+	/** vorhandene Familie mit nur einem Elternteil, die um den Partner ergänzt werden kann */
+	incomplete: { family: string; father: string; mother: string }[];
 	withoutUuid: string[];
 }
 
@@ -283,22 +364,37 @@ export function checkFamilies(model: VaultModel, rel: Relations, scope: Set<stri
 	const sex = (p: string) => model.persons.get(p)?.sex;
 	const needed = new Map<string, { father?: string; mother?: string }>();
 
-	for (const child of scope) {
-		const ps = [...(rel.parents.get(child) ?? [])];
-		const father = ps.find(x => sex(x) === 'M');
-		const mother = ps.find(x => sex(x) === 'F');
-		if (father || mother) needed.set(pairKey(father, mother), { father, mother });
+	// Elternpaare: Rolle aus dem Ereignis (Vater/Mutter). Eine Adoption ergibt eine zweite Familie.
+	for (const pair of rel.parentPairs) {
+		if (!scope.has(pair.child)) continue;
+		needed.set(pairKey(pair.father, pair.mother), { father: pair.father, mother: pair.mother });
 	}
+	// Ehepaare: Rolle aus dem Geschlecht; ohne Angabe gilt die Person als Ehemann, wenn der Partner weiblich ist
 	for (const p of scope) {
 		for (const s of rel.spouses.get(p) ?? []) {
-			const [father, mother] = sex(p) === 'M' ? [p, s] : [s, p];
+			const pIsWife = sex(p) === 'F' || (sex(p) !== 'M' && sex(s) === 'M');
+			const [father, mother] = pIsWife ? [s, p] : [p, s];
 			needed.set(pairKey(father, mother), { father, mother });
 		}
 	}
 
-	const result: FamilyCheck = { needed: [], missing: [], withoutUuid: [] };
+	const result: FamilyCheck = { needed: [], missing: [], incomplete: [], withoutUuid: [] };
+	const used = new Set<string>();
 	for (const [key, pair] of needed) {
-		const fam = existing.get(key);
+		let fam = existing.get(key);
+		// Vorhandene Familie mit nur einem Elternteil ergänzen statt eine zweite anzulegen —
+		// aber nur, wenn das Teilpaar selbst nicht mehr benötigt wird.
+		if (!fam && pair.father && pair.mother) {
+			for (const partial of [pairKey(pair.father, undefined), pairKey(undefined, pair.mother)]) {
+				const candidate = existing.get(partial);
+				if (candidate && !needed.has(partial) && !used.has(candidate.path)) {
+					fam = candidate;
+					used.add(candidate.path);
+					result.incomplete.push({ family: candidate.path, father: pair.father, mother: pair.mother });
+					break;
+				}
+			}
+		}
 		result.needed.push({ ...pair, family: fam?.path });
 		if (!fam) result.missing.push(pair);
 		else if (!fam.uuid) result.withoutUuid.push(fam.path);
@@ -365,8 +461,10 @@ export interface CheckResult {
 	reference?: {
 		individuals: GedcomIndividual[];
 		matches: ReferenceMatch[];
-		/** in der Referenz, aber nicht mehr im Umfang (außer Lebend-Regel) */
+		/** in der Referenz, aber nicht mehr im Umfang (außer Lebend-Regel und Datenschutz) */
 		dropped: string[];
+		/** in der Referenz, aber per Datenschutz ausgeschlossen: soll aus GEDBAS verschwinden */
+		removedByPrivacy: string[];
 		/** zugeordnet, aber ohne passenden GEDBAS-Link in refs */
 		missingRef: ReferenceMatch[];
 	};
@@ -375,6 +473,7 @@ export interface CheckResult {
 	duplicateUids: string[][];
 	/** UID vorhanden, aber kein gültiges Format */
 	invalidUids: string[];
+	living: LivingCheck;
 	dateLinks: DateLinkIssue[];
 	plausibility: PlausibilityIssue[];
 	families: FamilyCheck;
@@ -383,7 +482,7 @@ export interface CheckResult {
 
 export function runChecks(model: VaultModel, opts: CheckOptions, reference?: GedcomIndividual[]): CheckResult {
 	const rel = buildRelations(model);
-	const matches = reference ? matchReference(model, rel, reference) : [];
+	const matches = reference ? matchReference(model, rel, reference, opts.referenceSource) : [];
 	const referenced = matches.flatMap(m => (m.person ? [m.person] : []));
 	const scope = computeScope(model, rel, referenced, opts);
 
@@ -391,22 +490,24 @@ export function runChecks(model: VaultModel, opts: CheckOptions, reference?: Ged
 		model, rel, scope,
 		withoutUuid: [...scope.included].filter(p => !model.persons.get(p)?.uuid),
 		...checkUids(model),
+		living: checkLiving(model, rel, opts),
 		dateLinks: checkDateLinks(model),
 		plausibility: checkPlausibility(model, rel),
 		families: checkFamilies(model, rel, scope.included),
 		groups: findGroups(rel, scope.included),
 	};
 	if (reference) {
+		// Datenschutz geht vor Bestandsschutz: Lebend-Regel und nachträglich verschärfter Datenschutz sind gewollt
 		const living = new Set(scope.living);
+		const privacy = new Set(scope.excludedByPrivacy);
 		result.reference = {
 			individuals: reference,
 			matches,
-			dropped: referenced.filter(p => !scope.included.has(p) && !living.has(p)),
-			missingRef: matches.filter(m => {
-				if (!m.person) return false;
-				const id = m.individual.xref.replace(/^I/, '');
-				return !model.persons.get(m.person)?.gedbasRefs.some(r => r.includes(id));
-			}),
+			dropped: referenced.filter(p => !scope.included.has(p) && !living.has(p) && !privacy.has(p)),
+			removedByPrivacy: referenced.filter(p => privacy.has(p)),
+			missingRef: opts.referenceSource
+				? matches.filter(m => m.person && !model.persons.get(m.person)?.xrefs.includes(referenceXref(opts.referenceSource!, m.individual.xref)))
+				: [],
 		};
 	}
 	return result;
