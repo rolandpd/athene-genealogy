@@ -4,7 +4,8 @@
   },
   "cmd": {
     "newFile": "Créer un nouveau fichier...",
-    "newType": "Créer '{{name}}'"
+    "newType": "Créer '{{name}}'",
+    "gedcomReport": "Créer le rapport de contrôle GEDCOM"
   },
   "modal": {
     "title": "Créer '{{name}}'",
@@ -74,9 +75,30 @@
         "tooltipRemove": "Supprimer",
         "btnAdd": "Ajouter un modèle"
       }
+    },
+    "gedcom": {
+      "heading": "GEDCOM",
+      "reference": {
+        "name": "GEDCOM de référence",
+        "desc": "Fichier GEDCOM du coffre utilisé pour la comparaison, p. ex. la dernière réexportation d’une base en ligne. Laisser vide pour ignorer la comparaison.",
+        "placeholder": "Export/reexport.ged"
+      },
+      "report": {
+        "name": "Note du rapport",
+        "desc": "Chemin de la note dans laquelle le rapport est écrit. Elle est écrasée à chaque exécution."
+      },
+      "livingYears": {
+        "name": "Seuil des personnes vivantes (années)",
+        "desc": "Les personnes sans décès nées plus récemment sont considérées comme vivantes et ne sont pas exportées."
+      }
     }
   },
   "suggest": {
     "vaultRoot": "(Racine du coffre)"
+  },
+  "gedcom": {
+    "reportCreated": "Rapport de contrôle GEDCOM créé ({{count}} personnes à exporter)",
+    "reportFailed": "Échec du rapport de contrôle GEDCOM, voir la console",
+    "referenceMissing": "GEDCOM de référence introuvable : {{path}}"
   }
 }

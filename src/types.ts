@@ -24,11 +24,20 @@ export interface IdTypeConfig {
 export interface AthenePluginSettings {
 	locale: string;
 	idTypes: IdTypeConfig[];
+	/** GEDCOM-Datei im Vault, mit der abgeglichen wird (z. B. GEDBAS-Reexport) */
+	gedcomReferencePath: string;
+	/** Zielnotiz für den Prüfbericht */
+	gedcomReportPath: string;
+	/** Personen ohne Tod, die jünger sind, gelten als lebend */
+	gedcomLivingYears: number;
 }
 
 export const DEFAULT_SETTINGS: AthenePluginSettings = {
 	locale: 'de',
 	idTypes: [],
+	gedcomReferencePath: '',
+	gedcomReportPath: 'GEDCOM-Prüfbericht.md',
+	gedcomLivingYears: 100,
 };
 
 // ── Masken-Hilfsfunktionen ────────────────────────────────────────────────────

@@ -1,4 +1,5 @@
-import { Plugin, TFile } from 'obsidian';
+import { Notice, Plugin, TFile } from 'obsidian';
+import { createGedcomReport } from './gedcom/reportCommand';
 import { AtheneDate, type DateQualifier } from './date';
 import { AtheneGenealogySettingTab, DEFAULT_SETTINGS } from './settings';
 import type { AthenePluginSettings } from './types';
@@ -98,6 +99,17 @@ export default class AtheneGenealogyPlugin extends Plugin {
 		});
 
 		this.registerIdCommands();
+
+		this.addCommand({
+			id: 'gedcom-report',
+			name: t('cmd.gedcomReport'),
+			callback: () => {
+				void createGedcomReport(this.app, this.settings).catch((err: unknown) => {
+					console.error(err);
+					new Notice(t('gedcom.reportFailed'));
+				});
+			},
+		});
 
 		this.addSettingTab(new AtheneGenealogySettingTab(this.app, this));
 	}

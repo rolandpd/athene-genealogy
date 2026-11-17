@@ -29,6 +29,44 @@ export class AtheneGenealogySettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 
+		// ── GEDCOM ─────────────────────────────────────────────────────────
+		new Setting(containerEl).setName(t('settings.gedcom.heading')).setHeading();
+
+		new Setting(containerEl)
+			.setName(t('settings.gedcom.reference.name'))
+			.setDesc(t('settings.gedcom.reference.desc'))
+			.addText(text => {
+				text.setValue(this.plugin.settings.gedcomReferencePath)
+					.setPlaceholder(t('settings.gedcom.reference.placeholder'));
+				text.onChange(async val => {
+					this.plugin.settings.gedcomReferencePath = val.trim();
+					await this.plugin.saveSettings();
+				});
+			});
+
+		new Setting(containerEl)
+			.setName(t('settings.gedcom.report.name'))
+			.setDesc(t('settings.gedcom.report.desc'))
+			.addText(text => text
+				.setValue(this.plugin.settings.gedcomReportPath)
+				.onChange(async val => {
+					this.plugin.settings.gedcomReportPath = val.trim() || 'GEDCOM-Prüfbericht.md';
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName(t('settings.gedcom.livingYears.name'))
+			.setDesc(t('settings.gedcom.livingYears.desc'))
+			.addText(text => text
+				.setValue(String(this.plugin.settings.gedcomLivingYears))
+				.onChange(async val => {
+					const n = Number(val);
+					if (Number.isInteger(n) && n > 0) {
+						this.plugin.settings.gedcomLivingYears = n;
+						await this.plugin.saveSettings();
+					}
+				}));
+
 		// ── ID types ───────────────────────────────────────────────────────
 		new Setting(containerEl).setName(t('settings.idTypes.heading')).setHeading();
 		containerEl.createEl('p', {

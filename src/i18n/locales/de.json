@@ -4,7 +4,8 @@
   },
   "cmd": {
     "newFile": "Erstelle neue Datei…",
-    "newType": "Erstelle '{{name}}'"
+    "newType": "Erstelle '{{name}}'",
+    "gedcomReport": "GEDCOM-Prüfbericht erstellen"
   },
   "modal": {
     "title": "Erstelle '{{name}}'",
@@ -74,9 +75,30 @@
         "tooltipRemove": "Entfernen",
         "btnAdd": "Vorlage hinzufügen"
       }
+    },
+    "gedcom": {
+      "heading": "GEDCOM",
+      "reference": {
+        "name": "Referenz-GEDCOM",
+        "desc": "GEDCOM-Datei im Vault, mit der abgeglichen wird, z. B. der letzte Reexport aus einer Online-Datenbank. Leer lassen, um den Abgleich zu überspringen.",
+        "placeholder": "Export/reexport.ged"
+      },
+      "report": {
+        "name": "Notiz für den Prüfbericht",
+        "desc": "Pfad der Notiz, in die der Prüfbericht geschrieben wird. Sie wird bei jedem Lauf überschrieben."
+      },
+      "livingYears": {
+        "name": "Grenze für lebende Personen (Jahre)",
+        "desc": "Personen ohne Sterbeereignis, die später geboren sind, gelten als lebend und werden nicht exportiert."
+      }
     }
   },
   "suggest": {
     "vaultRoot": "(Vault-Wurzel)"
+  },
+  "gedcom": {
+    "reportCreated": "GEDCOM-Prüfbericht erstellt ({{count}} Personen im Export-Umfang)",
+    "reportFailed": "GEDCOM-Prüfbericht fehlgeschlagen, siehe Konsole",
+    "referenceMissing": "Referenz-GEDCOM nicht gefunden: {{path}}"
   }
 }

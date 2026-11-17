@@ -4,7 +4,8 @@
   },
   "cmd": {
     "newFile": "Utwórz nowy plik...",
-    "newType": "Utwórz '{{name}}'"
+    "newType": "Utwórz '{{name}}'",
+    "gedcomReport": "Utwórz raport kontrolny GEDCOM"
   },
   "modal": {
     "title": "Utwórz '{{name}}'",
@@ -74,9 +75,30 @@
         "tooltipRemove": "Usuń",
         "btnAdd": "Dodaj szablon"
       }
+    },
+    "gedcom": {
+      "heading": "GEDCOM",
+      "reference": {
+        "name": "Referencyjny GEDCOM",
+        "desc": "Plik GEDCOM w sejfie do porównania, np. ostatni reeksport z bazy online. Pozostaw puste, aby pominąć porównanie.",
+        "placeholder": "Export/reexport.ged"
+      },
+      "report": {
+        "name": "Notatka raportu",
+        "desc": "Ścieżka notatki, do której zapisywany jest raport. Jest nadpisywana przy każdym uruchomieniu."
+      },
+      "livingYears": {
+        "name": "Próg osób żyjących (lata)",
+        "desc": "Osoby bez zgonu urodzone później są traktowane jako żyjące i nie są eksportowane."
+      }
     }
   },
   "suggest": {
     "vaultRoot": "(Korzeń vault)"
+  },
+  "gedcom": {
+    "reportCreated": "Utworzono raport kontrolny GEDCOM ({{count}} osób do eksportu)",
+    "reportFailed": "Raport kontrolny GEDCOM nie powiódł się, zobacz konsolę",
+    "referenceMissing": "Nie znaleziono referencyjnego GEDCOM: {{path}}"
   }
 }

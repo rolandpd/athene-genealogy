@@ -4,7 +4,8 @@
   },
   "cmd": {
     "newFile": "Crear nove file...",
-    "newType": "Crear '{{name}}'"
+    "newType": "Crear '{{name}}'",
+    "gedcomReport": "Crear reporto de controlo GEDCOM"
   },
   "modal": {
     "title": "Crear '{{name}}'",
@@ -74,9 +75,30 @@
         "tooltipRemove": "Remover",
         "btnAdd": "Adder patrono"
       }
+    },
+    "gedcom": {
+      "heading": "GEDCOM",
+      "reference": {
+        "name": "GEDCOM de referentia",
+        "desc": "File GEDCOM in le cofre pro le comparation, p. ex. le ultime reexportation de un base de datos in linea. Lassar vacue pro saltar le comparation.",
+        "placeholder": "Export/reexport.ged"
+      },
+      "report": {
+        "name": "Nota del reporto",
+        "desc": "Percurso del nota in le qual le reporto es scribite. Illo es superscribite a cata execution."
+      },
+      "livingYears": {
+        "name": "Limite pro personas vivente (annos)",
+        "desc": "Personas sin morte nate plus recentemente es considerate vivente e non es exportate."
+      }
     }
   },
   "suggest": {
     "vaultRoot": "(Radice del vault)"
+  },
+  "gedcom": {
+    "reportCreated": "Reporto de controlo GEDCOM create ({{count}} personas pro exportation)",
+    "reportFailed": "Reporto de controlo GEDCOM falleva, vide le consola",
+    "referenceMissing": "GEDCOM de referentia non trovate: {{path}}"
   }
 }

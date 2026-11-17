@@ -4,7 +4,8 @@
   },
   "cmd": {
     "newFile": "Crear nuevo archivo...",
-    "newType": "Crear '{{name}}'"
+    "newType": "Crear '{{name}}'",
+    "gedcomReport": "Crear informe de control GEDCOM"
   },
   "modal": {
     "title": "Crear '{{name}}'",
@@ -74,9 +75,30 @@
         "tooltipRemove": "Eliminar",
         "btnAdd": "Agregar plantilla"
       }
+    },
+    "gedcom": {
+      "heading": "GEDCOM",
+      "reference": {
+        "name": "GEDCOM de referencia",
+        "desc": "Archivo GEDCOM de la bóveda con el que se compara, p. ej. la última reexportación de una base de datos en línea. Dejar vacío para omitir la comparación.",
+        "placeholder": "Export/reexport.ged"
+      },
+      "report": {
+        "name": "Nota del informe",
+        "desc": "Ruta de la nota en la que se escribe el informe. Se sobrescribe en cada ejecución."
+      },
+      "livingYears": {
+        "name": "Umbral de personas vivas (años)",
+        "desc": "Las personas sin defunción nacidas más recientemente se consideran vivas y no se exportan."
+      }
     }
   },
   "suggest": {
     "vaultRoot": "(Raíz del vault)"
+  },
+  "gedcom": {
+    "reportCreated": "Informe de control GEDCOM creado ({{count}} personas para exportar)",
+    "reportFailed": "Error en el informe de control GEDCOM, ver la consola",
+    "referenceMissing": "GEDCOM de referencia no encontrado: {{path}}"
   }
 }

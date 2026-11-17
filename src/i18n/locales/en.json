@@ -4,7 +4,8 @@
   },
   "cmd": {
     "newFile": "Create new file...",
-    "newType": "Create new '{{name}}'"
+    "newType": "Create new '{{name}}'",
+    "gedcomReport": "Create GEDCOM check report"
   },
   "modal": {
     "title": "Create new '{{name}}'",
@@ -74,9 +75,30 @@
         "tooltipRemove": "Remove",
         "btnAdd": "Add template"
       }
+    },
+    "gedcom": {
+      "heading": "GEDCOM",
+      "reference": {
+        "name": "Reference GEDCOM",
+        "desc": "GEDCOM file in the vault to compare against, e.g. the latest re-export from an online database. Leave empty to skip the comparison.",
+        "placeholder": "Export/reexport.ged"
+      },
+      "report": {
+        "name": "Check report note",
+        "desc": "Path of the note the check report is written to. It is overwritten on every run."
+      },
+      "livingYears": {
+        "name": "Living person threshold (years)",
+        "desc": "Persons without a death event who were born more recently are treated as living and are not exported."
+      }
     }
   },
   "suggest": {
     "vaultRoot": "(Vault root)"
+  },
+  "gedcom": {
+    "reportCreated": "GEDCOM check report created ({{count}} persons in export scope)",
+    "reportFailed": "GEDCOM check report failed, see console",
+    "referenceMissing": "Reference GEDCOM not found: {{path}}"
   }
 }

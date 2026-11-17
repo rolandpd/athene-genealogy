@@ -4,7 +4,8 @@
   },
   "cmd": {
     "newFile": "Crea nuovo file...",
-    "newType": "Crea '{{name}}'"
+    "newType": "Crea '{{name}}'",
+    "gedcomReport": "Crea rapporto di controllo GEDCOM"
   },
   "modal": {
     "title": "Crea '{{name}}'",
@@ -74,9 +75,30 @@
         "tooltipRemove": "Rimuovi",
         "btnAdd": "Aggiungi modello"
       }
+    },
+    "gedcom": {
+      "heading": "GEDCOM",
+      "reference": {
+        "name": "GEDCOM di riferimento",
+        "desc": "File GEDCOM nel vault con cui confrontare, ad es. l’ultima riesportazione da un database online. Lasciare vuoto per saltare il confronto.",
+        "placeholder": "Export/reexport.ged"
+      },
+      "report": {
+        "name": "Nota del rapporto",
+        "desc": "Percorso della nota in cui viene scritto il rapporto. Viene sovrascritta a ogni esecuzione."
+      },
+      "livingYears": {
+        "name": "Soglia persone viventi (anni)",
+        "desc": "Le persone senza decesso nate più di recente sono considerate viventi e non vengono esportate."
+      }
     }
   },
   "suggest": {
     "vaultRoot": "(Radice vault)"
+  },
+  "gedcom": {
+    "reportCreated": "Rapporto di controllo GEDCOM creato ({{count}} persone da esportare)",
+    "reportFailed": "Rapporto di controllo GEDCOM non riuscito, vedi la console",
+    "referenceMissing": "GEDCOM di riferimento non trovato: {{path}}"
   }
 }
