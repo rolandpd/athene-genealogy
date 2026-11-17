@@ -175,6 +175,17 @@ export class AtheneGenealogySettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 
+		new Setting(div)
+			.setName(t('settings.idType.uidProperty.label'))
+			.setDesc(t('settings.idType.uidProperty.desc'))
+			.addText(text => text
+				.setValue(type.uidProperty ?? '')
+				.setPlaceholder(t('settings.idType.uidProperty.placeholder'))
+				.onChange(async val => {
+					type.uidProperty = val.trim() || undefined;
+					await this.plugin.saveSettings();
+				}));
+
 		this.renderTemplates(div, type);
 	}
 

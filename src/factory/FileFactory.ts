@@ -1,6 +1,7 @@
 import { App, TFile, normalizePath } from 'obsidian';
 import type { IdRegistry } from '../registry/IdRegistry';
 import type { IdTypeConfig } from '../types';
+import { createUid, isValidUid } from '../gedcom/uid';
 
 // Minimal interface for the Templater plugin API we use
 interface TemplaterAPI {
@@ -12,6 +13,9 @@ interface TemplaterPlugin {
 interface AppWithPlugins extends App {
 	plugins?: { plugins?: Record<string, TemplaterPlugin | undefined> };
 }
+
+/** View state for opening a markdown file in editing mode (source/live preview). */
+export const EDIT_MODE = { state: { mode: 'source' }, active: true } as const;
 
 export class AtheneFactoryError extends Error {
 	constructor(
@@ -74,10 +78,13 @@ export class FileFactory {
 			throw new AtheneFactoryError('CREATE_FAILED', filePath);
 		}
 
-		// Open in leaf — required so Templater can write to the active editor
+		// Open in leaf — required so Templater can write to the active editor.
+		// Force editing mode: if the reused leaf shows a note in reading view,
+		// the new file would open in reading view too and Templater could not write.
 		if (openAfterCreate) {
 			const leaf = this.app.workspace.getLeaf(false);
-			await leaf.openFile(file);
+			await leaf.openFile(file, EDIT_MODE);
+			this.app.workspace.setActiveLeaf(leaf, { focus: true });
 		}
 
 		// Apply template
@@ -86,9 +93,10 @@ export class FileFactory {
 			await this.applyTemplate(file, templatePath, openAfterCreate);
 		}
 
-		// Set ID property in frontmatter
-		if (config.idProperty) {
+		// Set ID property (and a new UID, if configured) in frontmatter
+		if (config.idProperty || config.uidProperty) {
 			const prop = config.idProperty;
+			const uidProp = config.uidProperty;
 			// Re-fetch file: Templater may have moved it (TFile.path is updated in-place by Obsidian)
 			const currentFile = this.resolveFile(file, filePath);
 			if (!currentFile) throw new AtheneFactoryError('ID_PROPERTY_FAILED');
@@ -97,7 +105,9 @@ export class FileFactory {
 			// before calling processFrontMatter, otherwise the file is still empty on disk.
 			await this.waitForTemplaterWrite(currentFile);
 			await this.app.fileManager.processFrontMatter(currentFile, (fm: Record<string, unknown>) => {
-				fm[prop] = id;
+				if (prop) fm[prop] = id;
+				// Eine aus der Vorlage übernommene UID nicht überschreiben
+				if (uidProp && !isValidUid(fm[uidProp])) fm[uidProp] = createUid();
 			});
 			file = currentFile;
 		}

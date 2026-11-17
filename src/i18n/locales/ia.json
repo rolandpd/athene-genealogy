@@ -5,7 +5,8 @@
   "cmd": {
     "newFile": "Crear nove file...",
     "newType": "Crear '{{name}}'",
-    "gedcomReport": "Crear reporto de controlo GEDCOM"
+    "gedcomReport": "Crear reporto de controlo GEDCOM",
+    "assignUids": "Assignar UID mancante a personas"
   },
   "modal": {
     "title": "Crear '{{name}}'",
@@ -74,6 +75,11 @@
         "placeholder": "Patronos/Persona.md",
         "tooltipRemove": "Remover",
         "btnAdd": "Adder patrono"
+      },
+      "uidProperty": {
+        "label": "Proprietate UID",
+        "desc": "Optional: proprietate que recipe un nove UID GEDCOM al creation del file. Lassar vacue pro saltar.",
+        "placeholder": "p. ex. uuid"
       }
     },
     "gedcom": {
@@ -100,5 +106,14 @@
     "reportCreated": "Reporto de controlo GEDCOM create ({{count}} personas pro exportation)",
     "reportFailed": "Reporto de controlo GEDCOM falleva, vide le consola",
     "referenceMissing": "GEDCOM de referentia non trovate: {{path}}"
+  },
+  "uid": {
+    "noneMissing": "Tote le notas con #{{tag}} ha jam un UID.",
+    "assigned": "{{count}} UID assignate.",
+    "confirm": {
+      "title": "Assignar UID",
+      "message": "{{count}} notas con #{{tag}} non ha un UID valide. Scriber un nove UID in le proprietate \"{{property}}\" de cata una?",
+      "btnConfirm": "Assignar"
+    }
   }
 }

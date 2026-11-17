@@ -9,6 +9,11 @@ import { renderReport } from './report';
 
 export const GEDBAS_PERSON_URL = 'https://gedbas.genealogy.net/person/show/';
 
+/** Vorlagen der ID-Typen tragen dieselben Tags wie echte Datensätze und werden ausgenommen. */
+export function templatePaths(settings: AthenePluginSettings): Set<string> {
+	return new Set(settings.idTypes.flatMap(type => type.templates).filter(Boolean).map(p => normalizePath(p)));
+}
+
 /** Erstellt den GEDCOM-Prüfbericht und öffnet ihn. */
 export async function createGedcomReport(app: App, settings: AthenePluginSettings): Promise<void> {
 	let reference: GedcomIndividual[] | undefined;
@@ -22,7 +27,7 @@ export async function createGedcomReport(app: App, settings: AthenePluginSetting
 	}
 
 	const result = runChecks(
-		collectVaultModel(app),
+		collectVaultModel(app, templatePaths(settings)),
 		{ currentYear: new Date().getFullYear(), livingYears: settings.gedcomLivingYears },
 		reference,
 	);

@@ -19,6 +19,11 @@ export interface IdTypeConfig {
 	 * Nach dem Template wird das Property per processFrontMatter gesetzt/überschrieben.
 	 */
 	idProperty?: string;
+	/**
+	 * Optional: Frontmatter-Property für eine neue GEDCOM-UID, z.B. "uuid".
+	 * Wird beim Erstellen gesetzt, sofern die Vorlage keine gültige UID mitbringt.
+	 */
+	uidProperty?: string;
 }
 
 export interface AthenePluginSettings {

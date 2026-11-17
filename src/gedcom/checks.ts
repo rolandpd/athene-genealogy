@@ -1,4 +1,5 @@
 import { type GedcomIndividual, type VaultModel, parseWikilink, yearOfDateLink } from './model';
+import { isValidUid } from './uid';
 
 export interface CheckOptions {
 	/** Aktuelles Jahr (für die Lebend-Regel) */
@@ -341,6 +342,20 @@ export function findGroups(rel: Relations, scope: Set<string>): string[][] {
 	return groups.sort((a, b) => b.length - a.length);
 }
 
+// ── UIDs ──────────────────────────────────────────────────────────────────────
+
+export function checkUids(model: VaultModel): { duplicateUids: string[][]; invalidUids: string[] } {
+	const byUid = new Map<string, string[]>();
+	const invalidUids: string[] = [];
+	for (const p of model.persons.values()) {
+		if (!p.uuid) continue;
+		if (!isValidUid(p.uuid)) invalidUids.push(p.path);
+		const key = p.uuid.toLowerCase();
+		byUid.set(key, [...(byUid.get(key) ?? []), p.path]);
+	}
+	return { duplicateUids: [...byUid.values()].filter(v => v.length > 1), invalidUids };
+}
+
 // ── Gesamtlauf ────────────────────────────────────────────────────────────────
 
 export interface CheckResult {
@@ -356,6 +371,10 @@ export interface CheckResult {
 		missingRef: ReferenceMatch[];
 	};
 	withoutUuid: string[];
+	/** gleiche UID bei mehreren Personen (alle Personen, nicht nur der Umfang) */
+	duplicateUids: string[][];
+	/** UID vorhanden, aber kein gültiges Format */
+	invalidUids: string[];
 	dateLinks: DateLinkIssue[];
 	plausibility: PlausibilityIssue[];
 	families: FamilyCheck;
@@ -371,6 +390,7 @@ export function runChecks(model: VaultModel, opts: CheckOptions, reference?: Ged
 	const result: CheckResult = {
 		model, rel, scope,
 		withoutUuid: [...scope.included].filter(p => !model.persons.get(p)?.uuid),
+		...checkUids(model),
 		dateLinks: checkDateLinks(model),
 		plausibility: checkPlausibility(model, rel),
 		families: checkFamilies(model, rel, scope.included),

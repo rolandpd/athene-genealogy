@@ -5,7 +5,8 @@
   "cmd": {
     "newFile": "Crear nuevo archivo...",
     "newType": "Crear '{{name}}'",
-    "gedcomReport": "Crear informe de control GEDCOM"
+    "gedcomReport": "Crear informe de control GEDCOM",
+    "assignUids": "Asignar UID faltantes a personas"
   },
   "modal": {
     "title": "Crear '{{name}}'",
@@ -74,6 +75,11 @@
         "placeholder": "Plantillas/Persona.md",
         "tooltipRemove": "Eliminar",
         "btnAdd": "Agregar plantilla"
+      },
+      "uidProperty": {
+        "label": "Propiedad UID",
+        "desc": "Opcional: propiedad que recibe un UID GEDCOM nuevo al crear el archivo. Dejar vacío para omitir.",
+        "placeholder": "p. ej. uuid"
       }
     },
     "gedcom": {
@@ -100,5 +106,14 @@
     "reportCreated": "Informe de control GEDCOM creado ({{count}} personas para exportar)",
     "reportFailed": "Error en el informe de control GEDCOM, ver la consola",
     "referenceMissing": "GEDCOM de referencia no encontrado: {{path}}"
+  },
+  "uid": {
+    "noneMissing": "Todas las notas con #{{tag}} ya tienen un UID.",
+    "assigned": "{{count}} UID asignados.",
+    "confirm": {
+      "title": "Asignar UID",
+      "message": "{{count}} notas con #{{tag}} no tienen un UID válido. ¿Escribir un UID nuevo en la propiedad «{{property}}» de cada una?",
+      "btnConfirm": "Asignar"
+    }
   }
 }

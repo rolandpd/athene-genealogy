@@ -10,7 +10,7 @@ const str = (v: unknown): string | undefined => (typeof v === 'string' && v.trim
  * Liest Personen, Ereignisse und Familien aus dem metadataCache.
  * Typerkennung über die Tags `Personen`, `Ereignisse`, `Familien`.
  */
-export function collectVaultModel(app: App): VaultModel {
+export function collectVaultModel(app: App, exclude: Set<string> = new Set()): VaultModel {
 	const cache = app.metadataCache;
 	const resolve = (raw: unknown, source: TFile): string | undefined => {
 		const link = parseWikilink(raw);
@@ -20,6 +20,7 @@ export function collectVaultModel(app: App): VaultModel {
 
 	const model: VaultModel = { persons: new Map(), events: [], families: [] };
 	for (const file of app.vault.getMarkdownFiles()) {
+		if (exclude.has(file.path)) continue;
 		const fm = cache.getFileCache(file)?.frontmatter;
 		if (!fm) continue;
 		const tags = tagsOf(fm);

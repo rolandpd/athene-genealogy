@@ -5,7 +5,8 @@
   "cmd": {
     "newFile": "Create new file...",
     "newType": "Create new '{{name}}'",
-    "gedcomReport": "Create GEDCOM check report"
+    "gedcomReport": "Create GEDCOM check report",
+    "assignUids": "Assign missing UIDs to persons"
   },
   "modal": {
     "title": "Create new '{{name}}'",
@@ -74,6 +75,11 @@
         "placeholder": "Templates/Person.md",
         "tooltipRemove": "Remove",
         "btnAdd": "Add template"
+      },
+      "uidProperty": {
+        "label": "UID property",
+        "desc": "Optional: frontmatter property that receives a new GEDCOM UID when a file is created. Leave empty to skip.",
+        "placeholder": "e.g. uuid"
       }
     },
     "gedcom": {
@@ -100,5 +106,14 @@
     "reportCreated": "GEDCOM check report created ({{count}} persons in export scope)",
     "reportFailed": "GEDCOM check report failed, see console",
     "referenceMissing": "Reference GEDCOM not found: {{path}}"
+  },
+  "uid": {
+    "noneMissing": "All notes tagged #{{tag}} already have a UID.",
+    "assigned": "{{count}} UIDs assigned.",
+    "confirm": {
+      "title": "Assign UIDs",
+      "message": "{{count}} notes tagged #{{tag}} have no valid UID. Write a new UID into the property \"{{property}}\" of each?",
+      "btnConfirm": "Assign UIDs"
+    }
   }
 }

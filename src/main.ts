@@ -1,5 +1,7 @@
 import { Notice, Plugin, TFile } from 'obsidian';
-import { createGedcomReport } from './gedcom/reportCommand';
+import { createGedcomReport, templatePaths } from './gedcom/reportCommand';
+import { assignMissingUids } from './gedcom/uidCommand';
+import { createUid } from './gedcom/uid';
 import { AtheneDate, type DateQualifier } from './date';
 import { AtheneGenealogySettingTab, DEFAULT_SETTINGS } from './settings';
 import type { AthenePluginSettings } from './types';
@@ -33,6 +35,8 @@ export interface AtheneApi {
 	nextId(typeId: string): Promise<string | null>;
 	/** Creates a file for the given type ID. Returns file/id/filename on success, null if type not found or on error. */
 	createFile(typeId: string, filename?: string): Promise<{ file: TFile; id: string; filename: string } | null>;
+	/** Erzeugt eine neue GEDCOM-UID (36 Hex-Zeichen), z.B. für Templater-Vorlagen. */
+	createUid(): string;
 }
 
 declare global {
@@ -72,6 +76,7 @@ export default class AtheneGenealogyPlugin extends Plugin {
 				if (!config) return Promise.resolve(null);
 				return this.registry.peekNextId(config);
 			},
+			createUid: () => createUid(),
 			createFile: async (typeId, filename) => {
 				const config = this.settings.idTypes.find(type => type.id === typeId);
 				if (!config) return null;
@@ -99,6 +104,12 @@ export default class AtheneGenealogyPlugin extends Plugin {
 		});
 
 		this.registerIdCommands();
+
+		this.addCommand({
+			id: 'assign-uids',
+			name: t('cmd.assignUids'),
+			callback: () => assignMissingUids(this.app, 'Personen', 'uuid', templatePaths(this.settings)),
+		});
 
 		this.addCommand({
 			id: 'gedcom-report',

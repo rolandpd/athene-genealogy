@@ -5,7 +5,8 @@
   "cmd": {
     "newFile": "Utwórz nowy plik...",
     "newType": "Utwórz '{{name}}'",
-    "gedcomReport": "Utwórz raport kontrolny GEDCOM"
+    "gedcomReport": "Utwórz raport kontrolny GEDCOM",
+    "assignUids": "Nadaj brakujące UID osobom"
   },
   "modal": {
     "title": "Utwórz '{{name}}'",
@@ -74,6 +75,11 @@
         "placeholder": "Szablony/Osoba.md",
         "tooltipRemove": "Usuń",
         "btnAdd": "Dodaj szablon"
+      },
+      "uidProperty": {
+        "label": "Właściwość UID",
+        "desc": "Opcjonalnie: właściwość, która przy tworzeniu pliku otrzymuje nowy UID GEDCOM. Pozostaw puste, aby pominąć.",
+        "placeholder": "np. uuid"
       }
     },
     "gedcom": {
@@ -100,5 +106,14 @@
     "reportCreated": "Utworzono raport kontrolny GEDCOM ({{count}} osób do eksportu)",
     "reportFailed": "Raport kontrolny GEDCOM nie powiódł się, zobacz konsolę",
     "referenceMissing": "Nie znaleziono referencyjnego GEDCOM: {{path}}"
+  },
+  "uid": {
+    "noneMissing": "Wszystkie notatki z #{{tag}} mają już UID.",
+    "assigned": "Nadano {{count}} UID.",
+    "confirm": {
+      "title": "Nadaj UID",
+      "message": "{{count}} notatek z #{{tag}} nie ma prawidłowego UID. Zapisać nowy UID we właściwości „{{property}}” każdej z nich?",
+      "btnConfirm": "Nadaj"
+    }
   }
 }

@@ -5,7 +5,8 @@
   "cmd": {
     "newFile": "Erstelle neue Datei…",
     "newType": "Erstelle '{{name}}'",
-    "gedcomReport": "GEDCOM-Prüfbericht erstellen"
+    "gedcomReport": "GEDCOM-Prüfbericht erstellen",
+    "assignUids": "Fehlende UIDs für Personen vergeben"
   },
   "modal": {
     "title": "Erstelle '{{name}}'",
@@ -74,6 +75,11 @@
         "placeholder": "Vorlagen/Person.md",
         "tooltipRemove": "Entfernen",
         "btnAdd": "Vorlage hinzufügen"
+      },
+      "uidProperty": {
+        "label": "UID-Property",
+        "desc": "Optional: Frontmatter-Property, das beim Erstellen eine neue GEDCOM-UID erhält. Leer lassen, um keine UID zu vergeben.",
+        "placeholder": "z. B. uuid"
       }
     },
     "gedcom": {
@@ -100,5 +106,14 @@
     "reportCreated": "GEDCOM-Prüfbericht erstellt ({{count}} Personen im Export-Umfang)",
     "reportFailed": "GEDCOM-Prüfbericht fehlgeschlagen, siehe Konsole",
     "referenceMissing": "Referenz-GEDCOM nicht gefunden: {{path}}"
+  },
+  "uid": {
+    "noneMissing": "Alle Notizen mit #{{tag}} haben bereits eine UID.",
+    "assigned": "{{count}} UIDs vergeben.",
+    "confirm": {
+      "title": "UIDs vergeben",
+      "message": "{{count}} Notizen mit #{{tag}} haben keine gültige UID. Jeweils eine neue UID in das Property „{{property}}“ schreiben?",
+      "btnConfirm": "UIDs vergeben"
+    }
   }
 }

@@ -5,7 +5,8 @@
   "cmd": {
     "newFile": "Créer un nouveau fichier...",
     "newType": "Créer '{{name}}'",
-    "gedcomReport": "Créer le rapport de contrôle GEDCOM"
+    "gedcomReport": "Créer le rapport de contrôle GEDCOM",
+    "assignUids": "Attribuer les UID manquants aux personnes"
   },
   "modal": {
     "title": "Créer '{{name}}'",
@@ -74,6 +75,11 @@
         "placeholder": "Modèles/Personne.md",
         "tooltipRemove": "Supprimer",
         "btnAdd": "Ajouter un modèle"
+      },
+      "uidProperty": {
+        "label": "Propriété UID",
+        "desc": "Facultatif : propriété qui reçoit un nouvel UID GEDCOM à la création du fichier. Laisser vide pour ignorer.",
+        "placeholder": "p. ex. uuid"
       }
     },
     "gedcom": {
@@ -100,5 +106,14 @@
     "reportCreated": "Rapport de contrôle GEDCOM créé ({{count}} personnes à exporter)",
     "reportFailed": "Échec du rapport de contrôle GEDCOM, voir la console",
     "referenceMissing": "GEDCOM de référence introuvable : {{path}}"
+  },
+  "uid": {
+    "noneMissing": "Toutes les notes avec #{{tag}} ont déjà un UID.",
+    "assigned": "{{count}} UID attribués.",
+    "confirm": {
+      "title": "Attribuer des UID",
+      "message": "{{count}} notes avec #{{tag}} n’ont pas d’UID valide. Écrire un nouvel UID dans la propriété « {{property}} » de chacune ?",
+      "btnConfirm": "Attribuer"
+    }
   }
 }

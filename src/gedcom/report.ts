@@ -46,6 +46,7 @@ export function renderReport(r: CheckResult, meta: ReportMeta): string {
 	out.push(`| ausgelassen: Lebend-Regel | ${s.living.length} |`);
 	out.push(`| ausgelassen: \`Export: false\` / Datenschutz | ${s.excludedByFlag.length} |`);
 	out.push(`| im Umfang ohne \`uuid\` | ${r.withoutUuid.length} |`);
+	out.push(`| doppelte oder ungültige \`uuid\` | ${r.duplicateUids.length + r.invalidUids.length} |`);
 	out.push(`| benötigte Familien | ${r.families.needed.length} (${r.families.missing.length} ohne Datensatz, ${r.families.withoutUuid.length} ohne \`uuid\`) |`);
 	out.push(`| zusammenhängende Gruppen | ${r.groups.length} (${r.groups.slice(0, 6).map(g => g.length).join(', ')}${r.groups.length > 6 ? ', …' : ''}) |`);
 	out.push(`| Datumslinks fehlerhaft | ${r.dateLinks.length} |`);
@@ -111,9 +112,18 @@ export function renderReport(r: CheckResult, meta: ReportMeta): string {
 	out.push('Höchstens drei Personen ohne Verbindung zum Rest des Umfangs.', '');
 	out.push(list(small.map(g => sortByName(g).map(link).join(' + '))));
 
+	// ── UIDs
+	if (r.duplicateUids.length || r.invalidUids.length) {
+		out.push(`## UID-Fehler (${r.duplicateUids.length + r.invalidUids.length})`, '');
+		out.push(list([
+			...r.duplicateUids.map(g => `[ ] Gleiche \`uuid\`: ${sortByName(g).map(link).join(', ')}`),
+			...r.invalidUids.map(p => `[ ] Ungültige \`uuid\`: ${link(p)}`),
+		]));
+	}
+
 	// ── ohne uuid
 	out.push(`## Ohne \`uuid\` (${r.withoutUuid.length})`, '');
-	out.push('Wird vor dem ersten Export automatisch erzeugt.', '');
+	out.push('Command „Fehlende UIDs für Personen vergeben“ ausführen.', '');
 	out.push(list(sortByName(r.withoutUuid).map(link), 20));
 
 	return out.join('\n');
