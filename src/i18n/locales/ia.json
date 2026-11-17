@@ -7,7 +7,8 @@
     "newType": "Crear '{{name}}'",
     "gedcomReport": "Crear reporto de controlo GEDCOM",
     "assignUids": "Assignar UID mancante a personas",
-    "createFamilies": "Crear registros de familia mancante"
+    "createFamilies": "Crear registros de familia mancante",
+    "gedcomExport": "Exportar GEDCOM"
   },
   "modal": {
     "title": "Crear '{{name}}'",
@@ -105,6 +106,14 @@
       "familyType": {
         "name": "Typo de ID pro familias",
         "desc": "Nomine del typo de ID usate pro crear registros de familia."
+      },
+      "exportFolder": {
+        "name": "Dossier pro exportationes GEDCOM",
+        "desc": "Dossier del vault ubi le exportation es scribite. Vacue = radice."
+      },
+      "submitter": {
+        "name": "Submissor",
+        "desc": "Nomine in le capite GEDCOM (SUBM)."
       }
     }
   },
@@ -117,7 +126,10 @@
     "referenceMissing": "GEDCOM de referentia non trovate: {{path}}",
     "refresh": "Verificar de novo",
     "checkedAt": "Stato: {{time}}",
-    "unknownCheck": "Verification incognite “{{name}}”. Disponibile: {{names}}"
+    "unknownCheck": "Verification incognite “{{name}}”. Disponibile: {{names}}",
+    "exportBlocked": "Exportation GEDCOM cancellate, prime tracta le reporto: {{list}}",
+    "exportFailed": "Exportation GEDCOM fallite, vide le consola",
+    "exported": "{{path}} scribite: {{persons}} personas, {{families}} familias, {{estimated}} datas de morte estimate. UID de referentia perdite: {{lost}}"
   },
   "uid": {
     "noneMissing": "Tote le notas con #{{tag}} ha jam un UID.",

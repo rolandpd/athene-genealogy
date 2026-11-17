@@ -89,6 +89,26 @@ export class AtheneGenealogySettingTab extends PluginSettingTab {
 					}
 				}));
 
+		new Setting(containerEl)
+			.setName(t('settings.gedcom.exportFolder.name'))
+			.setDesc(t('settings.gedcom.exportFolder.desc'))
+			.addText(text => text
+				.setValue(this.plugin.settings.gedcomExportFolder)
+				.onChange(async val => {
+					this.plugin.settings.gedcomExportFolder = val.trim();
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName(t('settings.gedcom.submitter.name'))
+			.setDesc(t('settings.gedcom.submitter.desc'))
+			.addText(text => text
+				.setValue(this.plugin.settings.gedcomSubmitter)
+				.onChange(async val => {
+					this.plugin.settings.gedcomSubmitter = val.trim();
+					await this.plugin.saveSettings();
+				}));
+
 		// ── ID types ───────────────────────────────────────────────────────
 		new Setting(containerEl).setName(t('settings.idTypes.heading')).setHeading();
 		containerEl.createEl('p', {

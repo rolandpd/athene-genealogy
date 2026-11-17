@@ -357,7 +357,7 @@ export interface FamilyCheck {
 	withoutUuid: string[];
 }
 
-const pairKey = (f?: string, m?: string) => `${f ?? '-'}|${m ?? '-'}`;
+export const pairKey = (f?: string, m?: string) => `${f ?? '-'}|${m ?? '-'}`;
 
 export function checkFamilies(model: VaultModel, rel: Relations, scope: Set<string>): FamilyCheck {
 	const existing = new Map(model.families.map(f => [pairKey(f.father, f.mother), f]));

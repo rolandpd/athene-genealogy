@@ -7,7 +7,8 @@
     "newType": "Crear '{{name}}'",
     "gedcomReport": "Crear informe de control GEDCOM",
     "assignUids": "Asignar UID faltantes a personas",
-    "createFamilies": "Crear registros familiares faltantes"
+    "createFamilies": "Crear registros familiares faltantes",
+    "gedcomExport": "Exportar GEDCOM"
   },
   "modal": {
     "title": "Crear '{{name}}'",
@@ -105,6 +106,14 @@
       "familyType": {
         "name": "Tipo de ID para familias",
         "desc": "Nombre del tipo de ID con el que se crean los registros familiares."
+      },
+      "exportFolder": {
+        "name": "Carpeta para exportaciones GEDCOM",
+        "desc": "Carpeta del vault donde se escribe la exportación. Vacío = raíz."
+      },
+      "submitter": {
+        "name": "Remitente",
+        "desc": "Nombre en la cabecera GEDCOM (SUBM)."
       }
     }
   },
@@ -117,7 +126,10 @@
     "referenceMissing": "GEDCOM de referencia no encontrado: {{path}}",
     "refresh": "Volver a comprobar",
     "checkedAt": "Estado: {{time}}",
-    "unknownCheck": "Comprobación desconocida «{{name}}». Disponibles: {{names}}"
+    "unknownCheck": "Comprobación desconocida «{{name}}». Disponibles: {{names}}",
+    "exportBlocked": "Exportación GEDCOM cancelada, revise primero el informe: {{list}}",
+    "exportFailed": "La exportación GEDCOM falló, ver consola",
+    "exported": "{{path}} escrito: {{persons}} personas, {{families}} familias, {{estimated}} fechas de defunción estimadas. UID de referencia perdidos: {{lost}}"
   },
   "uid": {
     "noneMissing": "Todas las notas con #{{tag}} ya tienen un UID.",

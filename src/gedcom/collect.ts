@@ -1,5 +1,5 @@
 import type { App, FrontMatterCache, TFile } from 'obsidian';
-import { type VaultEvent, type VaultFamily, type VaultModel, type VaultPerson, normalizeEventType, parseWikilink } from './model';
+import { type VaultEvent, type VaultFamily, type VaultModel, type VaultPerson, linkText, normalizeEventType, parseWikilink } from './model';
 
 const asArray = (v: unknown): unknown[] => (v == null ? [] : Array.isArray(v) ? v : [v]);
 const tagsOf = (fm: FrontMatterCache): string[] => asArray(fm.tags).map(String);
@@ -20,7 +20,7 @@ export function collectVaultModel(app: App, exclude: Set<string> = new Set()): V
 		return cache.getFirstLinkpathDest(link.target, source.path)?.path;
 	};
 
-	const model: VaultModel = { persons: new Map(), events: [], families: [] };
+	const model: VaultModel = { persons: new Map(), events: [], families: [], places: new Map() };
 	for (const file of app.vault.getMarkdownFiles()) {
 		if (exclude.has(file.path)) continue;
 		const fm = cache.getFileCache(file)?.frontmatter;
@@ -38,6 +38,7 @@ export function collectVaultModel(app: App, exclude: Set<string> = new Set()): V
 				privacy: str(fm['Datenschutz']),
 				xrefs: asArray(fm['xrefs']).map(v => String(v).trim()).filter(Boolean),
 				status: linkTarget(fm['status']),
+				aliases: asArray(fm['aliases']).map(v => String(v).trim()).filter(Boolean),
 			};
 			model.persons.set(file.path, person);
 		} else if (hasTag(tags, 'Ereignisse')) {
@@ -50,6 +51,11 @@ export function collectVaultModel(app: App, exclude: Set<string> = new Set()): V
 				mother: resolve(fm['Mutter'], file),
 				date: str(fm['Datum']),
 				status: linkTarget(fm['status']),
+				place: resolve(fm['Ort'], file),
+				occupation: linkText(fm['Beruf']) ?? linkText(fm['Beschreibung']),
+				kind: linkText(fm['Art']),
+				religion: linkTarget(fm['Konfession']) ?? str(fm['Konfession']),
+				privacy: str(fm['Datenschutz']),
 			};
 			model.events.push(event);
 		} else if (hasTag(tags, 'Familien')) {
@@ -62,6 +68,12 @@ export function collectVaultModel(app: App, exclude: Set<string> = new Set()): V
 				mother: resolve(fm['Mutter'], file),
 			};
 			model.families.push(family);
+		} else if (hasTag(tags, 'Orte')) {
+			model.places!.set(file.path, {
+				path: file.path,
+				name: file.basename.replace(/\s+P\d+$/, ''),
+				address: str(fm['address']),
+			});
 		}
 	}
 	return model;

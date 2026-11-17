@@ -3,6 +3,7 @@ import { createGedcomReport, templatePaths } from './gedcom/reportCommand';
 import { assignMissingUids } from './gedcom/uidCommand';
 import { createMissingFamilies } from './gedcom/familyCommand';
 import { registerCheckBlock } from './gedcom/checkBlock';
+import { exportGedcom } from './gedcom/exportCommand';
 import { createUid } from './gedcom/uid';
 import { AtheneDate, type DateQualifier } from './date';
 import { AtheneGenealogySettingTab, DEFAULT_SETTINGS } from './settings';
@@ -131,6 +132,17 @@ export default class AtheneGenealogyPlugin extends Plugin {
 				void createGedcomReport(this.app, this.settings).catch((err: unknown) => {
 					console.error(err);
 					new Notice(t('gedcom.reportFailed'));
+				});
+			},
+		});
+
+		this.addCommand({
+			id: 'gedcom-export',
+			name: t('cmd.gedcomExport'),
+			callback: () => {
+				void exportGedcom(this.app, this.settings, this.manifest.version).catch((err: unknown) => {
+					console.error(err);
+					new Notice(t('gedcom.exportFailed'));
 				});
 			},
 		});

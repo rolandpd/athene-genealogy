@@ -61,6 +61,19 @@ function makeCtx(r: CheckResult, meta: ReportMeta, exportOnly: boolean): Ctx {
 const blockingDateLinks = (r: CheckResult) => r.dateLinks.filter(d => d.reason !== 'coarse');
 const openPlausibility = (r: CheckResult) => r.plausibility.filter(i => i.state === 'open');
 
+/** Alles, was den Export behindert, mit Anzahl. Der Export läuft nur, wenn alle 0 sind. */
+export function exportBlockers(r: CheckResult): [string, number][] {
+	return [
+		['GEDBAS-Personen nicht zugeordnet', r.reference ? r.reference.matches.filter(m => !m.person).length : 0],
+		['GEDBAS-Personen würden herausfallen', r.reference?.dropped.length ?? 0],
+		['Lebend-Regel ≠ Datenschutz', r.living.missingMark.length + r.living.markedButDead.length + r.living.markedButOld.length],
+		['weder Geburtsjahr noch Tod', r.scope.unknownLiving.length],
+		['Datumslinks fehlerhaft', blockingDateLinks(r).length],
+		['Familien fehlen oder unvollständig', r.families.missing.length + r.families.incomplete.length + r.families.withoutUuid.length],
+		['UID fehlt, doppelt oder ungültig', r.withoutUuid.length + r.duplicateUids.length + r.invalidUids.length],
+	];
+}
+
 /**
  * Erzeugt den Prüfbericht als Markdown-Notiz: Kennzahlen und alles, was den Export behindert.
  * Personen und Ereignisse werden als Wikilinks über den Dateinamen verlinkt.
@@ -87,16 +100,7 @@ export function renderReport(r: CheckResult, meta: ReportMeta): string {
 	out.push(`| benötigte Familien | ${r.families.needed.length} |`);
 	out.push(`| _kein Hindernis: offene Plausibilitätsfälle_ | ${openPlausibility(r).length} |`, '');
 
-	const blockers: [string, number][] = [
-		['GEDBAS-Personen nicht zugeordnet', r.reference ? r.reference.matches.filter(m => !m.person).length : 0],
-		['GEDBAS-Personen würden herausfallen', r.reference?.dropped.length ?? 0],
-		['Lebend-Regel ≠ Datenschutz', r.living.missingMark.length + r.living.markedButDead.length + r.living.markedButOld.length],
-		['weder Geburtsjahr noch Tod', s.unknownLiving.length],
-		['Datumslinks fehlerhaft', blockingDateLinks(r).length],
-		['Familien fehlen oder unvollständig', r.families.missing.length + r.families.incomplete.length + r.families.withoutUuid.length],
-		['UID fehlt, doppelt oder ungültig', r.withoutUuid.length + r.duplicateUids.length + r.invalidUids.length],
-	];
-	const open = blockers.filter(([, n]) => n > 0);
+	const open = exportBlockers(r).filter(([, n]) => n > 0);
 	out.push('## Export-Hindernisse', '');
 	out.push(open.length ? c.list(open.map(([k, n]) => `${k}: **${n}**`)) : '✅ Keine. Der Export kann laufen.\n');
 

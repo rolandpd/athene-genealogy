@@ -7,7 +7,8 @@
     "newType": "Utwórz '{{name}}'",
     "gedcomReport": "Utwórz raport kontrolny GEDCOM",
     "assignUids": "Nadaj brakujące UID osobom",
-    "createFamilies": "Utwórz brakujące rekordy rodzin"
+    "createFamilies": "Utwórz brakujące rekordy rodzin",
+    "gedcomExport": "Eksportuj GEDCOM"
   },
   "modal": {
     "title": "Utwórz '{{name}}'",
@@ -105,6 +106,14 @@
       "familyType": {
         "name": "Typ ID dla rodzin",
         "desc": "Nazwa typu ID używanego do tworzenia rekordów rodzin."
+      },
+      "exportFolder": {
+        "name": "Folder eksportów GEDCOM",
+        "desc": "Folder w sejfie, do którego zapisywany jest eksport. Pusty = katalog główny."
+      },
+      "submitter": {
+        "name": "Zgłaszający",
+        "desc": "Nazwa w nagłówku GEDCOM (SUBM)."
       }
     }
   },
@@ -117,7 +126,10 @@
     "referenceMissing": "Nie znaleziono referencyjnego GEDCOM: {{path}}",
     "refresh": "Sprawdź ponownie",
     "checkedAt": "Stan: {{time}}",
-    "unknownCheck": "Nieznane sprawdzenie „{{name}}”. Dostępne: {{names}}"
+    "unknownCheck": "Nieznane sprawdzenie „{{name}}”. Dostępne: {{names}}",
+    "exportBlocked": "Eksport GEDCOM przerwany, najpierw rozwiąż raport: {{list}}",
+    "exportFailed": "Eksport GEDCOM nie powiódł się, zobacz konsolę",
+    "exported": "Zapisano {{path}}: {{persons}} osób, {{families}} rodzin, {{estimated}} szacowanych dat zgonu. Utracone UID referencyjne: {{lost}}"
   },
   "uid": {
     "noneMissing": "Wszystkie notatki z #{{tag}} mają już UID.",

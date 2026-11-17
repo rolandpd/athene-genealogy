@@ -39,6 +39,10 @@ export interface AthenePluginSettings {
 	gedcomReportPath: string;
 	/** Personen ohne Tod, die jünger sind, gelten als lebend */
 	gedcomLivingYears: number;
+	/** Ordner für erzeugte GEDCOM-Dateien */
+	gedcomExportFolder: string;
+	/** Name des Einsenders (SUBM) im GEDCOM-Kopf */
+	gedcomSubmitter: string;
 }
 
 export const DEFAULT_SETTINGS: AthenePluginSettings = {
@@ -49,6 +53,8 @@ export const DEFAULT_SETTINGS: AthenePluginSettings = {
 	gedcomFamilyType: 'Familie',
 	gedcomReportPath: 'GEDCOM-Prüfbericht.md',
 	gedcomLivingYears: 100,
+	gedcomExportFolder: '',
+	gedcomSubmitter: '',
 };
 
 // ── Masken-Hilfsfunktionen ────────────────────────────────────────────────────

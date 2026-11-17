@@ -7,7 +7,8 @@
     "newType": "Create new '{{name}}'",
     "gedcomReport": "Create GEDCOM check report",
     "assignUids": "Assign missing UIDs to persons",
-    "createFamilies": "Create missing family records"
+    "createFamilies": "Create missing family records",
+    "gedcomExport": "Export GEDCOM"
   },
   "modal": {
     "title": "Create new '{{name}}'",
@@ -105,6 +106,14 @@
       "familyType": {
         "name": "ID type for families",
         "desc": "Name of the ID type used to create family records."
+      },
+      "exportFolder": {
+        "name": "Folder for GEDCOM exports",
+        "desc": "Vault folder the export is written to. Empty = vault root."
+      },
+      "submitter": {
+        "name": "Submitter",
+        "desc": "Name in the GEDCOM header (SUBM)."
       }
     }
   },
@@ -117,7 +126,10 @@
     "referenceMissing": "Reference GEDCOM not found: {{path}}",
     "refresh": "Check again",
     "checkedAt": "As of {{time}}",
-    "unknownCheck": "Unknown check “{{name}}”. Available: {{names}}"
+    "unknownCheck": "Unknown check “{{name}}”. Available: {{names}}",
+    "exportBlocked": "GEDCOM export cancelled, resolve the check report first: {{list}}",
+    "exportFailed": "GEDCOM export failed, see console",
+    "exported": "Wrote {{path}}: {{persons}} persons, {{families}} families, {{estimated}} estimated death dates. Lost reference UIDs: {{lost}}"
   },
   "uid": {
     "noneMissing": "All notes tagged #{{tag}} already have a UID.",

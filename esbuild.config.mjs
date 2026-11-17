@@ -39,6 +39,9 @@ const context = await esbuild.context({
 	treeShaking: true,
 	outfile: "main.js",
 	minify: prod,
+	// edtf unterscheidet Datum und Zeitraum über den Klassennamen (constructor.name);
+	// ohne keepNames liefert der minifizierte Build "s" statt "Date"/"Interval".
+	keepNames: true,
 });
 
 if (prod) {

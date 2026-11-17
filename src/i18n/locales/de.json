@@ -7,7 +7,8 @@
     "newType": "Erstelle '{{name}}'",
     "gedcomReport": "GEDCOM-Prüfbericht erstellen",
     "assignUids": "Fehlende UIDs für Personen vergeben",
-    "createFamilies": "Fehlende Familien-Datensätze anlegen"
+    "createFamilies": "Fehlende Familien-Datensätze anlegen",
+    "gedcomExport": "GEDCOM exportieren"
   },
   "modal": {
     "title": "Erstelle '{{name}}'",
@@ -105,6 +106,14 @@
       "familyType": {
         "name": "ID-Typ für Familien",
         "desc": "Name des ID-Typs, mit dem Familien-Datensätze angelegt werden."
+      },
+      "exportFolder": {
+        "name": "Ordner für GEDCOM-Exporte",
+        "desc": "Ordner im Vault, in den der Export geschrieben wird. Leer = Vault-Wurzel."
+      },
+      "submitter": {
+        "name": "Einsender",
+        "desc": "Name im GEDCOM-Kopf (SUBM)."
       }
     }
   },
@@ -117,7 +126,10 @@
     "referenceMissing": "Referenz-GEDCOM nicht gefunden: {{path}}",
     "refresh": "Neu prüfen",
     "checkedAt": "Stand: {{time}}",
-    "unknownCheck": "Unbekannte Prüfung „{{name}}“. Möglich: {{names}}"
+    "unknownCheck": "Unbekannte Prüfung „{{name}}“. Möglich: {{names}}",
+    "exportBlocked": "GEDCOM-Export abgebrochen, erst den Prüfbericht abarbeiten: {{list}}",
+    "exportFailed": "GEDCOM-Export fehlgeschlagen, siehe Konsole",
+    "exported": "{{path}} geschrieben: {{persons}} Personen, {{families}} Familien, {{estimated}} geschätzte Sterbedaten. Verlorene GEDBAS-UIDs: {{lost}}"
   },
   "uid": {
     "noneMissing": "Alle Notizen mit #{{tag}} haben bereits eine UID.",

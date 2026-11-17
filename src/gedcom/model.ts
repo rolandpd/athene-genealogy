@@ -20,6 +20,8 @@ export interface VaultPerson {
 	xrefs: string[];
 	/** Bearbeitungsstatus als Linkziel, z. B. "Klärungsbedarf" */
 	status?: string;
+	/** Aliase, z. B. Heiratsnamen "Maria Anna Kastner" */
+	aliases?: string[];
 }
 
 export interface VaultEvent {
@@ -35,6 +37,24 @@ export interface VaultEvent {
 	date?: string;
 	/** Bearbeitungsstatus als Linkziel, z. B. "Klärungsbedarf" */
 	status?: string;
+	/** Pfad der Ort-Notiz */
+	place?: string;
+	/** Beruf als Text: Anzeige des Beruf-Links, sonst Beschreibung */
+	occupation?: string;
+	/** Art, z. B. "Adoption" bei Elternschaft */
+	kind?: string;
+	/** Konfession bei der Taufe, z. B. "römisch-katholisch" */
+	religion?: string;
+	/** Rohwert des Datenschutz-Property */
+	privacy?: string;
+}
+
+export interface VaultPlace {
+	path: string;
+	/** Name ohne ID, z. B. "Wollishausen" */
+	name: string;
+	/** z. B. "DE-86459 Wollishausen" */
+	address?: string;
 }
 
 export interface VaultFamily {
@@ -50,6 +70,7 @@ export interface VaultModel {
 	persons: Map<string, VaultPerson>;
 	events: VaultEvent[];
 	families: VaultFamily[];
+	places?: Map<string, VaultPlace>;
 }
 
 /** Person aus einer GEDCOM-Datei (nur die für den Abgleich nötigen Felder). */
@@ -78,6 +99,14 @@ export function yearOfDateLink(raw: string | undefined): number | undefined {
 	const link = parseWikilink(raw);
 	const m = link?.target.match(/^(\d{4})/);
 	return m?.[1] ? Number(m[1]) : undefined;
+}
+
+/** "[[Landwirt (Beruf)|Bauer]]" → "Bauer", "Bauer" → "Bauer" */
+export function linkText(raw: unknown): string | undefined {
+	if (typeof raw !== 'string' || !raw.trim()) return undefined;
+	const link = parseWikilink(raw);
+	if (!link) return raw.trim();
+	return link.display || link.target;
 }
 
 /** "[[Geburt]]", "[[Wehrdienst|Kriegsdienst]]" oder "Geburt" → "Geburt" */
