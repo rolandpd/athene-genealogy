@@ -156,7 +156,7 @@
     "upToDate": "Wszystkie zewnętrzne ID są aktualne.",
     "confirm": {
       "title": "Przejmij zewnętrzne ID",
-      "message": "{{count}} osób otrzyma ID referencyjne w xrefs ({{source}}): {{added}} nowych, {{changed}} zmienionych. Tylko dopasowania po UID.",
+      "message": "{{count}} osób otrzyma ID referencyjne w xrefs ({{source}}): {{added}} nowych, {{changed}} zmienionych. Tylko dopasowania po UID. {{removed}} wpisów zostanie usuniętych (brak w referencji).",
       "btnConfirm": "Przejmij"
     },
     "done": "Zaktualizowano {{count}} osób."

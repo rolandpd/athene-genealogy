@@ -156,7 +156,7 @@
     "upToDate": "All external IDs are up to date.",
     "confirm": {
       "title": "Take over external IDs",
-      "message": "{{count}} persons get the reference ID as xrefs entry ({{source}}): {{added}} new, {{changed}} changed. Only matches by UID.",
+      "message": "{{count}} persons get the reference ID as xrefs entry ({{source}}): {{added}} new, {{changed}} changed. Only matches by UID. {{removed}} entries will be removed (no longer in the reference).",
       "btnConfirm": "Take over"
     },
     "done": "{{count}} persons updated."

@@ -156,7 +156,7 @@
     "upToDate": "Todos los IDs externos están actualizados.",
     "confirm": {
       "title": "Adoptar IDs externos",
-      "message": "{{count}} personas reciben el ID de referencia como xrefs ({{source}}): {{added}} nuevos, {{changed}} cambiados. Solo coincidencias por UID.",
+      "message": "{{count}} personas reciben el ID de referencia como xrefs ({{source}}): {{added}} nuevos, {{changed}} cambiados. Solo coincidencias por UID. Se eliminarán {{removed}} entradas (ya no están en la referencia).",
       "btnConfirm": "Adoptar"
     },
     "done": "{{count}} personas actualizadas."

@@ -156,7 +156,7 @@
     "upToDate": "Tutti gli ID esterni sono aggiornati.",
     "confirm": {
       "title": "Riprendi ID esterni",
-      "message": "{{count}} persone ricevono l'ID di riferimento in xrefs ({{source}}): {{added}} nuovi, {{changed}} modificati. Solo corrispondenze per UID.",
+      "message": "{{count}} persone ricevono l'ID di riferimento in xrefs ({{source}}): {{added}} nuovi, {{changed}} modificati. Solo corrispondenze per UID. {{removed}} voci saranno rimosse (non più nel riferimento).",
       "btnConfirm": "Riprendi"
     },
     "done": "{{count}} persone aggiornate."

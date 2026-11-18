@@ -223,15 +223,25 @@ describe('Rückabgleich xrefs', () => {
 		'0 @I1482398462@ INDI', '1 NAME Balbina /Zedelmaier/', '1 _UID 174597123e63452eb66281c0e2ba8d67027b',
 		'0 @I1482398500@ INDI', '1 NAME Josef /Mayr/'].join('\n');
 	const m = model([
-		person('Baumann, Anna Maria I0002.md', { kekule: true, uuid: 'cf502118db07f43b795d3f4923bde5de08c0', xrefs: ['S00239:1482398190'] }),
-		person('Zedelmaier, Balbina I0304.md', { kekule: true, uuid: '174597123e63452eb66281c0e2ba8d67027b', xrefs: ['S00239:1449005645', 'S00001:42'] }),
+		person('Baumann, Anna Maria I0002.md', { kekule: true, uuid: 'cf502118db07f43b795d3f4923bde5de08c0', xrefs: ['S00239:cf502118db07f43b795d3f4923bde5de08c0'] }),
+		person('Zedelmaier, Balbina I0304.md', { kekule: true, uuid: '174597123e63452eb66281c0e2ba8d67027b', xrefs: ['S00239:1482398462', 'S00001:42'] }),
 		person('Mayr, Josef I0003.md', { kekule: true }),
+		person('Moser, Monika I0332.md', { kekule: true, privacy: '[[Privat]]', xrefs: ['S00239:85e6b51bbfa3ce40c3b13c3909d694d00ed5'] }),
 	], []);
 	const r = runChecks(m, { ...OPTS, referenceSource: 'S00239' }, readGedcomIndividuals(ged));
 
-	it('ersetzt veraltete IDs derselben Quelle, nur bei UID-Zuordnung', () => {
+	it('schreibt die UID der Referenz, ersetzt alte IDs und entfernt Personen, die nicht mehr in der Referenz stehen', () => {
 		expect(planXrefUpdates(r, 'S00239')).toEqual([
-			{ path: 'Zedelmaier, Balbina I0304.md', xrefs: ['S00001:42', 'S00239:1482398462'], previous: 'S00239:1449005645' },
+			{ path: 'Zedelmaier, Balbina I0304.md', xrefs: ['S00001:42', 'S00239:174597123e63452eb66281c0e2ba8d67027b'], previous: 'S00239:1482398462' },
+			{ path: 'Moser, Monika I0332.md', xrefs: [], previous: 'S00239:85e6b51bbfa3ce40c3b13c3909d694d00ed5' },
 		]);
+		expect(r.reference?.staleRef).toEqual(['Moser, Monika I0332.md']);
+	});
+
+	it('ordnet Referenzpersonen ohne UID weiterhin über die XREF zu', () => {
+		const noUid = readGedcomIndividuals(['0 @I1482398500@ INDI', '1 NAME Josef /Huber/'].join('\n'));
+		const mm = model([person('Mayr, Josef I0003.md', { kekule: true, xrefs: ['S00239:1482398500'] })], []);
+		const rr = runChecks(mm, { ...OPTS, referenceSource: 'S00239' }, noUid);
+		expect(rr.reference?.matches[0]).toMatchObject({ person: 'Mayr, Josef I0003.md', via: 'xref' });
 	});
 });

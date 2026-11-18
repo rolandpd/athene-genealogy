@@ -156,7 +156,7 @@
     "upToDate": "Tote le ID externe es actual.",
     "confirm": {
       "title": "Adoptar ID externe",
-      "message": "{{count}} personas recipe le ID de referentia como xrefs ({{source}}): {{added}} nove, {{changed}} cambiate. Solmente per UID.",
+      "message": "{{count}} personas recipe le ID de referentia como xrefs ({{source}}): {{added}} nove, {{changed}} cambiate. Solmente per UID. {{removed}} entratas essera removite (non plus in le referentia).",
       "btnConfirm": "Adoptar"
     },
     "done": "{{count}} personas actualisate."

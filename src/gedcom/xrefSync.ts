@@ -19,11 +19,13 @@ export async function syncReferenceXrefs(app: App, settings: AthenePluginSetting
 		new Notice(t('xrefSync.upToDate'));
 		return;
 	}
-	const changed = updates.filter(u => u.previous).length;
+	const prefix = `${source}:`;
+	const removed = updates.filter(u => !u.xrefs.some(x => x.startsWith(prefix))).length;
+	const changed = updates.filter(u => u.previous).length - removed;
 	new ConfirmModal(
 		app,
 		t('xrefSync.confirm.title'),
-		t('xrefSync.confirm.message', { count: updates.length, added: updates.length - changed, changed, source }),
+		t('xrefSync.confirm.message', { count: updates.length, added: updates.length - changed - removed, changed, removed, source }),
 		t('xrefSync.confirm.btnConfirm'),
 		async () => {
 			let done = 0;

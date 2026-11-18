@@ -13,9 +13,13 @@ export interface CheckOptions {
 	referenceSource?: string;
 }
 
-/** "I1449005733" → "S00239:1449005733" */
-export function referenceXref(source: string, xref: string): string {
-	return `${source}:${xref.replace(/^I/, '')}`;
+/**
+ * `xrefs`-Eintrag für eine Person der Referenz: die stabile UID, wenn die Referenz eine hat
+ * ("S00239:174597123e63…"), sonst die XREF ohne "I" ("S00239:1449005733").
+ * GEDBAS vergibt bei jedem Upload neue Personen-IDs, nur die UID bleibt.
+ */
+export function referenceXref(source: string, g: { xref: string; uid?: string }): string {
+	return `${source}:${g.uid ?? g.xref.replace(/^I/, '')}`;
 }
 
 export const BIRTH_TYPES = ['Geburt', 'Taufe'];
@@ -119,7 +123,7 @@ export function matchReference(model: VaultModel, rel: Relations, individuals: G
 	const matches: ReferenceMatch[] = individuals.filter(g => !g.deleted).map(g => {
 		const uidHit = g.uid ? byUid.get(g.uid) : undefined;
 		if (uidHit) return { individual: g, person: uidHit, via: 'uid' as const, candidates: [uidHit] };
-		const xrefHit = source ? byXref.get(referenceXref(source, g.xref)) : undefined;
+		const xrefHit = source ? byXref.get(referenceXref(source, g)) : undefined;
 		if (xrefHit) return { individual: g, person: xrefHit, via: 'xref' as const, candidates: [xrefHit] };
 
 		const year = Number(g.birthDate?.match(/\d{4}/)?.[0]) || undefined;
@@ -467,6 +471,8 @@ export interface CheckResult {
 		removedByPrivacy: string[];
 		/** zugeordnet, aber ohne passenden GEDBAS-Link in refs */
 		missingRef: ReferenceMatch[];
+		/** Personen mit einem Eintrag dieser Quelle in `xrefs`, die nicht (mehr) in der Referenz stehen */
+		staleRef: string[];
 	};
 	withoutUuid: string[];
 	/** gleiche UID bei mehreren Personen (alle Personen, nicht nur der Umfang) */
@@ -506,7 +512,12 @@ export function runChecks(model: VaultModel, opts: CheckOptions, reference?: Ged
 			dropped: referenced.filter(p => !scope.included.has(p) && !living.has(p) && !privacy.has(p)),
 			removedByPrivacy: referenced.filter(p => privacy.has(p)),
 			missingRef: opts.referenceSource
-				? matches.filter(m => m.person && !model.persons.get(m.person)?.xrefs.includes(referenceXref(opts.referenceSource!, m.individual.xref)))
+				? matches.filter(m => m.person && !model.persons.get(m.person)?.xrefs.includes(referenceXref(opts.referenceSource!, m.individual)))
+				: [],
+			staleRef: opts.referenceSource
+				? [...model.persons.values()]
+					.filter(p => !referenced.includes(p.path) && p.xrefs.some(x => x.startsWith(`${opts.referenceSource}:`)))
+					.map(p => p.path)
 				: [],
 		};
 	}

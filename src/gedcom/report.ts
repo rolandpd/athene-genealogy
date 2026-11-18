@@ -1,4 +1,4 @@
-import { STATUS_KNOWN_PROBLEM, type CheckResult, type PlausibilityIssue } from './checks';
+import { STATUS_KNOWN_PROBLEM, type CheckResult, type PlausibilityIssue, referenceXref } from './checks';
 
 export interface ReportMeta {
 	/** Zeitpunkt der Erstellung, z. B. "17.11.2026 14:05" */
@@ -160,10 +160,13 @@ function gedbas({ r, meta, link, list, sortByName, todo }: Ctx): string[] {
 	}
 
 	if (meta.referenceSource) {
-		out.push(`### GEDBAS-ID fehlt in \`xrefs\` (${ref.missingRef.length})`, '');
 		const changed = ref.missingRef.filter(m => r.model.persons.get(m.person!)?.xrefs.some(x => x.startsWith(`${meta.referenceSource}:`))).length;
-		out.push(`Kein Hindernis. ${changed} davon haben eine veraltete ID derselben Quelle. Das Command „Externe IDs aus der Referenz-GEDCOM übernehmen“ trägt sie ein.`, '');
-		out.push(list(ref.missingRef.map(m => `${link(m.person)} → \`${meta.referenceSource}:${m.individual.xref.replace(/^I/, '')}\``), 15));
+		out.push(`### \`xrefs\` nicht aktuell (${ref.missingRef.length + ref.staleRef.length})`, '');
+		out.push(`Kein Hindernis. ${ref.missingRef.length - changed} ohne Eintrag, ${changed} mit veraltetem Eintrag, ${ref.staleRef.length} mit Eintrag, aber nicht mehr in der Referenz. Das Command „Externe IDs aus der Referenz-GEDCOM übernehmen“ gleicht alle ab.`, '');
+		out.push(list([
+			...ref.missingRef.map(m => `${link(m.person)} → \`${referenceXref(meta.referenceSource!, m.individual)}\``),
+			...sortByName(ref.staleRef).map(p => `${link(p)} → entfernen`),
+		], 15));
 	}
 	return out;
 }

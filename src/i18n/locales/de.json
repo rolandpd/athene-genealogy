@@ -156,7 +156,7 @@
     "upToDate": "Alle externen IDs sind aktuell.",
     "confirm": {
       "title": "Externe IDs übernehmen",
-      "message": "{{count}} Personen bekommen die ID aus der Referenz als xrefs-Eintrag ({{source}}): {{added}} neu, {{changed}} geändert. Nur Zuordnungen über die UID.",
+      "message": "{{count}} Personen bekommen die ID aus der Referenz als xrefs-Eintrag ({{source}}): {{added}} neu, {{changed}} geändert. Nur Zuordnungen über die UID. {{removed}} Einträge werden entfernt (nicht mehr in der Referenz).",
       "btnConfirm": "Übernehmen"
     },
     "done": "{{count}} Personen aktualisiert."
