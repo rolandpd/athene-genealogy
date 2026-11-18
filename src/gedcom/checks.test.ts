@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { checkDateLink, computeScope, buildRelations, matchReference, nameKey, runChecks, checkFamilies } from './checks';
 import { readGedcomIndividuals } from './gedcomReader';
+import { planXrefUpdates } from './xrefPlan';
 import { normalizeEventType, type VaultEvent, type VaultModel, type VaultPerson } from './model';
 
 function person(path: string, extra: Partial<VaultPerson> = {}): VaultPerson {
@@ -214,5 +215,23 @@ describe('Plausibilität und Bearbeitungsstatus', () => {
 		const issues = runChecks(m, OPTS).plausibility;
 		expect(issues.find(i => i.kind === 'parentAge')).toMatchObject({ state: 'reviewed', events: ['E2', 'E1'] });
 		expect(issues.find(i => i.kind === 'parentDead')).toMatchObject({ state: 'known', events: ['E4', 'E3'] });
+	});
+});
+
+describe('Rückabgleich xrefs', () => {
+	const ged = ['0 @I1482398190@ INDI', '1 NAME Anna Maria /Baumann/', '1 _UID cf502118db07f43b795d3f4923bde5de08c0',
+		'0 @I1482398462@ INDI', '1 NAME Balbina /Zedelmaier/', '1 _UID 174597123e63452eb66281c0e2ba8d67027b',
+		'0 @I1482398500@ INDI', '1 NAME Josef /Mayr/'].join('\n');
+	const m = model([
+		person('Baumann, Anna Maria I0002.md', { kekule: true, uuid: 'cf502118db07f43b795d3f4923bde5de08c0', xrefs: ['S00239:1482398190'] }),
+		person('Zedelmaier, Balbina I0304.md', { kekule: true, uuid: '174597123e63452eb66281c0e2ba8d67027b', xrefs: ['S00239:1449005645', 'S00001:42'] }),
+		person('Mayr, Josef I0003.md', { kekule: true }),
+	], []);
+	const r = runChecks(m, { ...OPTS, referenceSource: 'S00239' }, readGedcomIndividuals(ged));
+
+	it('ersetzt veraltete IDs derselben Quelle, nur bei UID-Zuordnung', () => {
+		expect(planXrefUpdates(r, 'S00239')).toEqual([
+			{ path: 'Zedelmaier, Balbina I0304.md', xrefs: ['S00001:42', 'S00239:1482398462'], previous: 'S00239:1449005645' },
+		]);
 	});
 });

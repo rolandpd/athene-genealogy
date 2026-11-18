@@ -8,7 +8,8 @@
     "gedcomReport": "Crear informe de control GEDCOM",
     "assignUids": "Asignar UID faltantes a personas",
     "createFamilies": "Crear registros familiares faltantes",
-    "gedcomExport": "Exportar GEDCOM"
+    "gedcomExport": "Exportar GEDCOM",
+    "syncReferenceXrefs": "Adoptar IDs externos del GEDCOM de referencia"
   },
   "modal": {
     "title": "Crear '{{name}}'",
@@ -149,5 +150,15 @@
       "message": "{{missing}} parejas de padres a exportar aún no tienen registro familiar, a {{complete}} registros existentes les falta un progenitor, {{uuid}} registros existentes no tienen UID. ¿Crear, completar y añadir los UID?",
       "btnConfirm": "Crear"
     }
+  },
+  "xrefSync": {
+    "noSource": "No hay fuente de referencia (Ajustes → GEDCOM).",
+    "upToDate": "Todos los IDs externos están actualizados.",
+    "confirm": {
+      "title": "Adoptar IDs externos",
+      "message": "{{count}} personas reciben el ID de referencia como xrefs ({{source}}): {{added}} nuevos, {{changed}} cambiados. Solo coincidencias por UID.",
+      "btnConfirm": "Adoptar"
+    },
+    "done": "{{count}} personas actualizadas."
   }
 }

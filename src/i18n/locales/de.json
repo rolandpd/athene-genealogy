@@ -8,7 +8,8 @@
     "gedcomReport": "GEDCOM-Prüfbericht erstellen",
     "assignUids": "Fehlende UIDs für Personen vergeben",
     "createFamilies": "Fehlende Familien-Datensätze anlegen",
-    "gedcomExport": "GEDCOM exportieren"
+    "gedcomExport": "GEDCOM exportieren",
+    "syncReferenceXrefs": "Externe IDs aus der Referenz-GEDCOM übernehmen"
   },
   "modal": {
     "title": "Erstelle '{{name}}'",
@@ -149,5 +150,15 @@
       "message": "{{missing}} Elternpaare im Export-Umfang haben noch keinen Familien-Datensatz, bei {{complete}} vorhandenen Familien fehlt der zweite Elternteil, {{uuid}} vorhandene Familien haben keine UID. Anlegen, ergänzen und UIDs vergeben?",
       "btnConfirm": "Anlegen"
     }
+  },
+  "xrefSync": {
+    "noSource": "Keine Referenzquelle eingestellt (Einstellungen → GEDCOM).",
+    "upToDate": "Alle externen IDs sind aktuell.",
+    "confirm": {
+      "title": "Externe IDs übernehmen",
+      "message": "{{count}} Personen bekommen die ID aus der Referenz als xrefs-Eintrag ({{source}}): {{added}} neu, {{changed}} geändert. Nur Zuordnungen über die UID.",
+      "btnConfirm": "Übernehmen"
+    },
+    "done": "{{count}} Personen aktualisiert."
   }
 }

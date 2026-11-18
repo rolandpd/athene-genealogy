@@ -8,7 +8,8 @@
     "gedcomReport": "Create GEDCOM check report",
     "assignUids": "Assign missing UIDs to persons",
     "createFamilies": "Create missing family records",
-    "gedcomExport": "Export GEDCOM"
+    "gedcomExport": "Export GEDCOM",
+    "syncReferenceXrefs": "Take over external IDs from reference GEDCOM"
   },
   "modal": {
     "title": "Create new '{{name}}'",
@@ -149,5 +150,15 @@
       "message": "{{missing}} parent couples in the export scope have no family record yet, {{complete}} existing family records lack the second parent, {{uuid}} existing family records have no UID. Create, complete and add the UIDs?",
       "btnConfirm": "Create"
     }
+  },
+  "xrefSync": {
+    "noSource": "No reference source configured (Settings → GEDCOM).",
+    "upToDate": "All external IDs are up to date.",
+    "confirm": {
+      "title": "Take over external IDs",
+      "message": "{{count}} persons get the reference ID as xrefs entry ({{source}}): {{added}} new, {{changed}} changed. Only matches by UID.",
+      "btnConfirm": "Take over"
+    },
+    "done": "{{count}} persons updated."
   }
 }

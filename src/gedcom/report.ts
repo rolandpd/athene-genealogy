@@ -161,7 +161,8 @@ function gedbas({ r, meta, link, list, sortByName, todo }: Ctx): string[] {
 
 	if (meta.referenceSource) {
 		out.push(`### GEDBAS-ID fehlt in \`xrefs\` (${ref.missingRef.length})`, '');
-		out.push('Kein Hindernis: wird beim Rückabgleich nach dem nächsten Import nachgetragen.', '');
+		const changed = ref.missingRef.filter(m => r.model.persons.get(m.person!)?.xrefs.some(x => x.startsWith(`${meta.referenceSource}:`))).length;
+		out.push(`Kein Hindernis. ${changed} davon haben eine veraltete ID derselben Quelle. Das Command „Externe IDs aus der Referenz-GEDCOM übernehmen“ trägt sie ein.`, '');
 		out.push(list(ref.missingRef.map(m => `${link(m.person)} → \`${meta.referenceSource}:${m.individual.xref.replace(/^I/, '')}\``), 15));
 	}
 	return out;

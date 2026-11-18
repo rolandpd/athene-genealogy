@@ -4,6 +4,7 @@ import { assignMissingUids } from './gedcom/uidCommand';
 import { createMissingFamilies } from './gedcom/familyCommand';
 import { registerCheckBlock } from './gedcom/checkBlock';
 import { exportGedcom } from './gedcom/exportCommand';
+import { syncReferenceXrefs } from './gedcom/xrefSync';
 import { createUid } from './gedcom/uid';
 import { AtheneDate, type DateQualifier } from './date';
 import { AtheneGenealogySettingTab, DEFAULT_SETTINGS } from './settings';
@@ -143,6 +144,17 @@ export default class AtheneGenealogyPlugin extends Plugin {
 				void exportGedcom(this.app, this.settings, this.manifest.version).catch((err: unknown) => {
 					console.error(err);
 					new Notice(t('gedcom.exportFailed'));
+				});
+			},
+		});
+
+		this.addCommand({
+			id: 'sync-reference-xrefs',
+			name: t('cmd.syncReferenceXrefs'),
+			callback: () => {
+				void syncReferenceXrefs(this.app, this.settings).catch((err: unknown) => {
+					console.error(err);
+					new Notice(t('gedcom.reportFailed'));
 				});
 			},
 		});

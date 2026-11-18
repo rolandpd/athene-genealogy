@@ -8,7 +8,8 @@
     "gedcomReport": "Utwórz raport kontrolny GEDCOM",
     "assignUids": "Nadaj brakujące UID osobom",
     "createFamilies": "Utwórz brakujące rekordy rodzin",
-    "gedcomExport": "Eksportuj GEDCOM"
+    "gedcomExport": "Eksportuj GEDCOM",
+    "syncReferenceXrefs": "Przejmij zewnętrzne ID z referencyjnego GEDCOM"
   },
   "modal": {
     "title": "Utwórz '{{name}}'",
@@ -149,5 +150,15 @@
       "message": "{{missing}} par rodziców do eksportu nie ma jeszcze rekordu rodziny, w {{complete}} istniejących rekordach brakuje drugiego rodzica, {{uuid}} istniejących rekordów nie ma UID. Utworzyć, uzupełnić i dodać UID?",
       "btnConfirm": "Utwórz"
     }
+  },
+  "xrefSync": {
+    "noSource": "Brak źródła referencyjnego (Ustawienia → GEDCOM).",
+    "upToDate": "Wszystkie zewnętrzne ID są aktualne.",
+    "confirm": {
+      "title": "Przejmij zewnętrzne ID",
+      "message": "{{count}} osób otrzyma ID referencyjne w xrefs ({{source}}): {{added}} nowych, {{changed}} zmienionych. Tylko dopasowania po UID.",
+      "btnConfirm": "Przejmij"
+    },
+    "done": "Zaktualizowano {{count}} osób."
   }
 }
