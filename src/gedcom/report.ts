@@ -65,7 +65,6 @@ const openPlausibility = (r: CheckResult) => r.plausibility.filter(i => i.state 
 export function exportBlockers(r: CheckResult): [string, number][] {
 	return [
 		['GEDBAS-Personen nicht zugeordnet', r.reference ? r.reference.matches.filter(m => !m.person).length : 0],
-		['GEDBAS-Personen würden herausfallen', r.reference?.dropped.length ?? 0],
 		['Lebend-Regel ≠ Datenschutz', r.living.missingMark.length + r.living.markedButDead.length + r.living.markedButOld.length],
 		['weder Geburtsjahr noch Tod', r.scope.unknownLiving.length],
 		['Datumslinks fehlerhaft', blockingDateLinks(r).length],
@@ -93,7 +92,7 @@ export function renderReport(r: CheckResult, meta: ReportMeta): string {
 	out.push(`| Personen im Vault | ${r.model.persons.size} |`);
 	out.push(`| mit Kekulé-Nummer | ${[...r.model.persons.values()].filter(p => p.kekule).length} |`);
 	out.push(`| mit Kekulé-Personen verbunden | ${s.connected.size} |`);
-	if (r.reference) out.push(`| aus GEDBAS übernommen (Bestandsschutz) | ${s.protectedByReference.size} |`);
+	if (r.reference) out.push(`| in GEDBAS (Referenz) | ${s.protectedByReference.size} |`);
 	out.push(`| **Export-Umfang** | **${s.included.size}** |`);
 	if (r.reference) out.push(`| davon neu gegenüber GEDBAS | ${[...s.included].filter(p => !s.protectedByReference.has(p)).length} |`);
 	out.push(`| ausgelassen: Lebend-Regel | ${s.living.length} |`);
@@ -150,9 +149,9 @@ function gedbas({ r, meta, link, list, sortByName, todo }: Ctx): string[] {
 		out.push(`Von Hand zuordnen: bei der Person \`xrefs: - ${meta.referenceSource}:<GEDBAS-ID>\` eintragen.`, '');
 	}
 
-	out.push(`### Würden aus GEDBAS herausfallen (${ref.dropped.length})`, '');
-	out.push('In GEDBAS vorhanden, aber nicht mehr im Export-Umfang (ohne Lebend-Regel und Datenschutz).', '');
-	out.push(list(sortByName(ref.dropped).map(p => `${todo}${link(p)}`)));
+	out.push(`### Fallen aus GEDBAS heraus (${ref.dropped.length})`, '');
+	out.push('Kein Hindernis: In GEDBAS vorhanden, aber nach den Regeln nicht im Export-Umfang (nicht mit einer Kekulé-Person verbunden, oder nur über eine lebende oder private Person). Werden beim nächsten Upload entfernt. Soll eine Person bleiben, fehlt im Vault meist ein Eltern- oder Heiratsereignis.', '');
+	out.push(list(sortByName(ref.dropped).map(p => `${todo}${link(p)} (${r.rel.birthYear.get(p) ?? '?'})`)));
 
 	const added = sortByName([...r.scope.included].filter(p => !r.scope.protectedByReference.has(p)));
 	out.push(`### Neu gegenüber GEDBAS (${added.length})`, '');
@@ -161,7 +160,7 @@ function gedbas({ r, meta, link, list, sortByName, todo }: Ctx): string[] {
 
 	if (ref.removedByPrivacy.length) {
 		out.push(`### Per Datenschutz aus GEDBAS entfernen (${ref.removedByPrivacy.length})`, '');
-		out.push('Kein Hindernis: Datenschutz geht vor Bestandsschutz. Nach dem Import im Reexport prüfen, ob die Personen wirklich verschwunden sind.', '');
+		out.push('Kein Hindernis: per Datenschutz bewusst nicht veröffentlicht. Nach dem Import im Reexport prüfen, ob die Personen wirklich verschwunden sind.', '');
 		out.push(list(sortByName(ref.removedByPrivacy).map(p => `${link(p)} (${String(r.model.persons.get(p)?.privacy ?? '')})`)));
 	}
 

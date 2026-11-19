@@ -78,9 +78,10 @@ describe('Export-Umfang', () => {
 		expect(scope.unknownLiving.sort()).toEqual(['mutter.md', 'vater.md']);
 	});
 
-	it('übernimmt Personen aus der Referenz (Bestandsschutz)', () => {
+	it('nimmt Personen aus der Referenz nicht automatisch auf (kein Bestandsschutz)', () => {
 		const scope = computeScope(m, rel, ['fremd.md'], OPTS);
-		expect(scope.included.has('fremd.md')).toBe(true);
+		expect(scope.included.has('fremd.md')).toBe(false);
+		expect(scope.protectedByReference.has('fremd.md')).toBe(true);
 	});
 
 	it('leitet benötigte Familien ab', () => {
@@ -143,7 +144,12 @@ describe('GEDCOM-Abgleich', () => {
 		expect(r.reference?.missingRef).toHaveLength(1);
 	});
 
-	it('Datenschutz geht vor Bestandsschutz', () => {
+	it('meldet Referenz-Personen außerhalb des Umfangs, außer bei Datenschutz', () => {
+		const ohne = model([person('Baumann, Anna Maria I0002.md', { uuid: 'cf502118db07f43b795d3f4923bde5de08c0' })], []);
+		expect(runChecks(ohne, OPTS, readGedcomIndividuals(ged)).reference?.dropped).toEqual(['Baumann, Anna Maria I0002.md']);
+	});
+
+	it('Datenschutz Privat ist eine gewollte Auslassung', () => {
 		const m = model([person('Baumann, Anna Maria I0002.md', { uuid: 'cf502118db07f43b795d3f4923bde5de08c0', privacy: '[[Privat]]' })], []);
 		const r = runChecks(m, OPTS, readGedcomIndividuals(ged));
 		expect(r.scope.included.has('Baumann, Anna Maria I0002.md')).toBe(false);

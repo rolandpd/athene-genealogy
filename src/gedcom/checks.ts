@@ -164,7 +164,7 @@ export interface Scope {
 	included: Set<string>;
 	/** mit einer Kekulé-Person verbunden (Eltern, Kinder, Ehepartner, beliebig weit) */
 	connected: Set<string>;
-	/** aus der Referenz übernommen (Bestandsschutz) */
+	/** Personen, die in der Referenz (z.B. GEDBAS) stehen; nur zum Vergleich, kein Bestandsschutz */
 	protectedByReference: Set<string>;
 	/** per Datenschutz ausgeschlossen (Privat) */
 	excludedByPrivacy: string[];
@@ -208,7 +208,7 @@ export function checkLiving(model: VaultModel, rel: Relations, opts: CheckOption
 
 /**
  * Export-Umfang: alle Personen, die über Eltern, Kinder und Ehepartner mit einer Kekulé-Person
- * verbunden sind, dazu die Personen aus der Referenz (Bestandsschutz). Ausgeschlossen werden
+ * verbunden sind. Ausgeschlossen werden
  * Datenschutz Privat/Lebend und die Lebend-Regel. Über ausgeschlossene Personen wird nicht
  * weitergesucht, damit z.B. die Schwiegerfamilie einer lebenden Person nicht mitkommt.
  */
@@ -234,8 +234,9 @@ export function computeScope(model: VaultModel, rel: Relations, referenced: Iter
 			}
 		}
 	}
+	// Kein Bestandsschutz: Der Umfang ergibt sich nur aus den Daten. Die Referenz dient allein dem Vergleich.
 	const protectedByReference = new Set(referenced);
-	const candidates = new Set([...connected, ...protectedByReference]);
+	const candidates = connected;
 
 	const scope: Scope = { included: new Set(), connected, protectedByReference, excludedByPrivacy: [], living: [], unknownLiving: [] };
 	for (const p of candidates) {
@@ -533,9 +534,10 @@ export function runChecks(model: VaultModel, opts: CheckOptions, reference?: Ged
 		groups: findGroups(rel, scope.included),
 	};
 	if (reference) {
-		// Datenschutz geht vor Bestandsschutz: Lebend-Regel und nachträglich verschärfter Datenschutz sind gewollt
+		// Lebend-Regel und Datenschutz sind gewollte Auslassungen; der Rest muss entschieden werden
 		const living = new Set(scope.living);
-		const privacy = new Set(scope.excludedByPrivacy);
+		const privacy = new Set(referenced.filter(p => isPrivate(model.persons.get(p)?.privacy)));
+		for (const p of referenced) if (isLivingMark(model.persons.get(p)?.privacy)) living.add(p);
 		result.reference = {
 			individuals: reference,
 			matches,
