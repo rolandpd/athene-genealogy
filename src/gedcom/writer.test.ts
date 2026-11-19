@@ -127,3 +127,35 @@ describe('writeGedcom: Freitext-Orte, sonstige Ereignisse, Wohnort', () => {
 		expect(text).toContain('1 PROP Grundbesitz\r\n2 DATE 1950');
 	});
 });
+
+describe('writeGedcom: Zuordnung über die Typ-Notizen', () => {
+	const v = 'Mayr, Georg I0001.md', m = 'Huber, Anna I0002.md', k = 'Mayr, Josef I0003.md';
+	const pers = (path: string, sex: string, id: string) => ({ path, basename: path.replace(/\.md$/, ''), id, kekule: true, xrefs: [], sex });
+	const model: VaultModel = {
+		persons: new Map([[v, pers(v, 'M', 'I0001')], [m, pers(m, 'F', 'I0002')], [k, pers(k, 'M', 'I0003')]]),
+		events: [
+			{ path: 'E1', basename: 'E1', type: 'Taufe', persons: [k], date: '[[1850-03-02|02.03.1850]]', father: v, mother: m, religion: 'römisch-katholisch' },
+			{ path: 'E2', basename: 'E2', type: 'Priesterweihe', persons: [k], date: '[[1875|1875]]' },
+			{ path: 'E3', basename: 'E3', type: 'Mitgliedschaft', persons: [k], date: '[[1880|1880]]', fields: { Organisation: 'Kolpingverein' } },
+			{ path: 'E4', basename: 'E4', type: 'Verlobung', persons: [v, m], date: '[[1848|1848]]' },
+			{ path: 'E5', basename: 'E5', type: 'Stand', persons: [m], date: '[[1849|1849]]', fields: { Stand: 'Bauerstochter' } },
+			{ path: 'E6', basename: 'E6', type: 'Geburt', persons: [k], date: '[[1850-03-01|01.03.1850]]', father: v, mother: m },
+			{ path: 'E7', basename: 'E7', type: 'Tod', persons: [v, m, k], date: '[[1900|1900]]' },
+		],
+		families: [{ path: 'F1.md', basename: 'F0001', id: 'F0001', uuid: 'dddddddddddddddddddddddddddddddddddd', father: v, mother: m }],
+		places: new Map(),
+		eventTypes: new Map([['Stand', { gedcom: 'OCCU', gedcomValue: ['Stand'] }]]),
+	};
+	const { text } = writeGedcom(runChecks(model, { currentYear: 2026, livingYears: 100 }), { created: new Date(2026, 10, 19), version: 'test' });
+
+	it('nutzt eigene Tags (ORDN), Konfession an der Taufe und FACT als EVEN', () => {
+		expect(text).toContain('1 CHR\r\n2 DATE 2 MAR 1850\r\n2 RELI römisch-katholisch');
+		expect(text).toContain('1 ORDN\r\n2 DATE 1875');
+		expect(text).toContain('1 EVEN Kolpingverein\r\n2 TYPE Mitgliedschaft\r\n2 DATE 1880');
+	});
+
+	it('liest neue Typen aus den Typ-Notizen und schreibt Paar-Ereignisse an die Familie', () => {
+		expect(text).toContain('1 OCCU Bauerstochter\r\n2 DATE 1849');
+		expect(text.slice(text.indexOf('0 @F0001@ FAM'))).toContain('1 ENGA\r\n2 DATE 1848');
+	});
+});

@@ -6,6 +6,15 @@ const tagsOf = (fm: FrontMatterCache): string[] => asArray(fm.tags).map(String);
 const hasTag = (tags: string[], root: string) => tags.some(t => t === root || t.startsWith(root + '/'));
 /** "[[Klärungsbedarf|🔴]]" → "Klärungsbedarf" */
 const linkTarget = (v: unknown): string | undefined => (typeof v === 'string' ? parseWikilink(v)?.target : undefined);
+/** Alle Properties als Text (erster Listeneintrag, Wikilink → Anzeige). */
+const textFields = (fm: FrontMatterCache): Record<string, string> => {
+	const out: Record<string, string> = {};
+	for (const [k, v] of Object.entries(fm)) {
+		const t = linkText(asArray(v)[0]);
+		if (t) out[k] = t;
+	}
+	return out;
+};
 /** Erster Ort = Ort des Ereignisses, die weiteren sind genauere Angaben (Hof, Kirche). */
 const places = (paths: string[]) => ({ place: paths[0], placeDetails: paths.length > 1 ? paths.slice(1) : undefined });
 const str = (v: unknown): string | undefined => (typeof v === 'string' && v.trim() ? v.trim() : typeof v === 'number' ? String(v) : undefined);
@@ -22,7 +31,7 @@ export function collectVaultModel(app: App, exclude: Set<string> = new Set()): V
 		return cache.getFirstLinkpathDest(link.target, source.path)?.path;
 	};
 
-	const model: VaultModel = { persons: new Map(), events: [], families: [], places: new Map() };
+	const model: VaultModel = { persons: new Map(), events: [], families: [], places: new Map(), eventTypes: new Map() };
 	for (const file of app.vault.getMarkdownFiles()) {
 		if (exclude.has(file.path)) continue;
 		const fm = cache.getFileCache(file)?.frontmatter;
@@ -57,6 +66,7 @@ export function collectVaultModel(app: App, exclude: Set<string> = new Set()): V
 				placeText: asArray(fm['Ort']).find((v): v is string => typeof v === 'string' && !!v.trim() && !parseWikilink(v))?.trim(),
 				description: linkText(fm['Beschreibung']),
 				address: str(fm['Adresse']),
+				fields: textFields(fm),
 				occupation: linkText(fm['Beruf']) ?? linkText(fm['Beschreibung']),
 				kind: linkText(fm['Art']),
 				religion: linkTarget(fm['Konfession']) ?? str(fm['Konfession']),
@@ -73,6 +83,15 @@ export function collectVaultModel(app: App, exclude: Set<string> = new Set()): V
 				mother: resolve(fm['Mutter'], file),
 			};
 			model.families.push(family);
+		} else if (hasTag(tags, 'System/Ereignistyp') && str(fm['gedcom'])) {
+			const def = {
+				gedcom: str(fm['gedcom'])!.toUpperCase(),
+				gedcomType: str(fm['gedcomType']),
+				gedcomValue: asArray(fm['gedcomValue']).map(String).filter(Boolean),
+			};
+			for (const name of [file.basename, ...asArray(fm['aliases']).map(String)]) {
+				if (name.trim() && !model.eventTypes!.has(name.trim())) model.eventTypes!.set(name.trim(), def);
+			}
 		} else if (hasTag(tags, 'Orte')) {
 			const loc = asArray(fm['location']).flatMap(v => String(v).replace(/[[\]\s]/g, '').split(',')).map(Number);
 			const gov = asArray(fm['xrefs']).map(String).map(x => x.match(/gov\.genealogy\.net\/(?:item\/show\/)?([A-Za-z0-9_-]+)/)?.[1]).find(Boolean);

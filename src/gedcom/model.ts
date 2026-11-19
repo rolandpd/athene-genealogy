@@ -47,6 +47,8 @@ export interface VaultEvent {
 	description?: string;
 	/** `Adresse` (beim Wohnort) */
 	address?: string;
+	/** alle Properties als Text (Wikilink → Anzeige), für die Werte aus `gedcomValue` */
+	fields?: Record<string, string>;
 	/** Beruf als Text: Anzeige des Beruf-Links, sonst Beschreibung */
 	occupation?: string;
 	/** Art, z. B. "Adoption" bei Elternschaft */
@@ -70,6 +72,16 @@ export interface VaultPlace {
 	long?: number;
 }
 
+/** Technische Zuordnung eines Ereignistyps aus `System/Ereignistyp/<Typ>` zu GEDCOM. */
+export interface EventTypeDef {
+	/** GEDCOM-Tag, z. B. "OCCU", "EVEN", "MARR" */
+	gedcom: string;
+	/** angezeigter Name bei EVEN/FACT, z. B. "Inhaftierung" */
+	gedcomType?: string;
+	/** Properties, aus denen der Wert eines Attributs kommt (erstes mit Wert gilt) */
+	gedcomValue?: string[];
+}
+
 export interface VaultFamily {
 	path: string;
 	basename: string;
@@ -84,6 +96,8 @@ export interface VaultModel {
 	events: VaultEvent[];
 	families: VaultFamily[];
 	places?: Map<string, VaultPlace>;
+	/** Ereignistypen nach Name und Aliasen */
+	eventTypes?: Map<string, EventTypeDef>;
 }
 
 /** Person aus einer GEDCOM-Datei (nur die für den Abgleich nötigen Felder). */

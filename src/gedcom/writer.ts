@@ -1,6 +1,6 @@
 import { AtheneDate } from '../date/AtheneDate';
 import { type CheckResult, isPrivate, pairKey } from './checks';
-import { type VaultEvent, type VaultPerson, parseWikilink } from './model';
+import { type EventTypeDef, type VaultEvent, type VaultPerson, parseWikilink } from './model';
 
 /**
  * GEDCOM 5.5.1-Export für GEDBAS.
@@ -19,6 +19,8 @@ export interface WriterOptions {
 	submitter?: string;
 	/** PLAC-Werte der Referenz-GEDCOM, damit bekannte Orte gleich geschrieben werden ("Wollishausen, BY") */
 	referencePlaces?: string[];
+	/** `FACT` als `EVEN` schreiben, weil GEDBAS `FACT` nicht anzeigt (Standard: true) */
+	factAsEven?: boolean;
 }
 
 export interface WriterResult {
@@ -29,30 +31,42 @@ export interface WriterResult {
 	estimatedDeaths: number;
 }
 
-/** Ereignistyp im Vault → GEDCOM-Tag (Personen). Fehlende Typen werden nicht exportiert. */
-const INDI_EVENTS: Record<string, { tag: string; type?: string; value?: boolean }> = {
-	Geburt: { tag: 'BIRT' },
-	Taufe: { tag: 'CHR' },
-	Tod: { tag: 'DEAT' },
-	Beisetzung: { tag: 'BURI' },
-	Firmung: { tag: 'CONF' },
-	Kommunion: { tag: 'FCOM' },
-	Wohnort: { tag: 'RESI' },
-	Nachlass: { tag: 'WILL' },
-	Beruf: { tag: 'OCCU', value: true },
-	Ausbildung: { tag: 'EDUC', value: true },
-	Grundbesitz: { tag: 'PROP', value: true },
-	Priesterweihe: { tag: 'EVEN', type: 'Priesterweihe' },
-	Primiz: { tag: 'EVEN', type: 'Primiz' },
-	Wehrdienst: { tag: 'EVEN', type: 'Wehrdienst' },
-	Inhaftierung: { tag: 'EVEN', type: 'Inhaftierung' },
-	Mitgliedschaft: { tag: 'EVEN', type: 'Mitgliedschaft' },
-	Krankensalbung: { tag: 'EVEN', type: 'Krankensalbung' },
-	Amt: { tag: 'EVEN', type: 'Amt' },
-	// generisch: TYPE aus `Art`, sonst "Ereignis"; Text aus `Beschreibung`
-	Sonstiges: { tag: 'EVEN' },
-	Ereignis: { tag: 'EVEN' },
+/**
+ * Eingebaute Zuordnung, falls ein Ereignistyp keine Typ-Notiz mit `gedcom` hat.
+ * Maßgeblich sind die Typ-Notizen unter System/Ereignistyp (Properties `gedcom`, `gedcomType`, `gedcomValue`).
+ */
+const BUILTIN_TYPES: Record<string, EventTypeDef> = {
+	Geburt: { gedcom: 'BIRT' },
+	Taufe: { gedcom: 'CHR' },
+	Firmung: { gedcom: 'CONF' },
+	Kommunion: { gedcom: 'FCOM' },
+	Priesterweihe: { gedcom: 'ORDN' },
+	Elternschaft: { gedcom: 'ADOP' },
+	Tod: { gedcom: 'DEAT' },
+	Beisetzung: { gedcom: 'BURI' },
+	Nachlass: { gedcom: 'PROB' },
+	Heirat: { gedcom: 'MARR' },
+	Verlobung: { gedcom: 'ENGA' },
+	Ehevertrag: { gedcom: 'MARC' },
+	Beruf: { gedcom: 'OCCU', gedcomValue: ['Beruf', 'Amt', 'Beschreibung'] },
+	Amt: { gedcom: 'OCCU', gedcomValue: ['Amt', 'Beschreibung'] },
+	Ausbildung: { gedcom: 'EDUC', gedcomValue: ['Beruf', 'Beschreibung'] },
+	Wohnort: { gedcom: 'RESI', gedcomValue: ['Adresse', 'Beschreibung'] },
+	Grundbesitz: { gedcom: 'PROP', gedcomValue: ['Beschreibung'] },
+	Mitgliedschaft: { gedcom: 'FACT', gedcomType: 'Mitgliedschaft', gedcomValue: ['Organisation', 'Beschreibung'] },
+	Primiz: { gedcom: 'EVEN', gedcomType: 'Primiz' },
+	Krankensalbung: { gedcom: 'EVEN', gedcomType: 'Krankensalbung' },
+	Inhaftierung: { gedcom: 'EVEN', gedcomType: 'Inhaftierung' },
+	Wehrdienst: { gedcom: 'EVEN', gedcomType: 'Militärdienst' },
+	Sonstiges: { gedcom: 'EVEN' },
+	Ereignis: { gedcom: 'EVEN' },
 };
+/** Ereignisse eines Paares (stehen in GEDCOM an der FAM) */
+const FAMILY_TAGS = new Set(['MARR', 'ENGA', 'MARC', 'MARB', 'MARL', 'MARS', 'DIV', 'DIVF', 'ANUL']);
+/** Attribute: haben immer einen Wert in der Zeile */
+const ATTRIBUTE_TAGS = new Set(['OCCU', 'EDUC', 'PROP', 'RELI', 'NATI', 'TITL', 'FACT', 'DSCR', 'CAST', 'IDNO', 'NCHI', 'NMR']);
+const TAG_ORDER = ['BIRT', 'CHR', 'BAPM', 'ADOP', 'CONF', 'FCOM', 'ORDN', 'EDUC', 'OCCU', 'PROP', 'RESI', 'FACT', 'EVEN', 'WILL', 'PROB', 'DEAT', 'BURI'];
+const tagRank = (tag: string) => (TAG_ORDER.includes(tag) ? TAG_ORDER.indexOf(tag) : TAG_ORDER.length);
 /** GEDCOM-Zeilen dürfen höchstens 255 Zeichen lang sein. */
 /** Freitext für GEDCOM: Wikilinks auflösen ("[[C01386]]" → "C01386", "[[Ziel|Anzeige]]" → "Anzeige"), höchstens `max` Zeichen. */
 const clip = (s: string | undefined, max = 200) => {
@@ -60,7 +74,6 @@ const clip = (s: string | undefined, max = 200) => {
 	const plain = s.replace(/\[\[([^\]|]+)(?:\|([^\]]*))?\]\]/g, (_m, target: string, display?: string) => display || target).replace(/\s+/g, ' ').trim();
 	return plain.length > max ? plain.slice(0, max - 1) + '…' : plain;
 };
-const TAG_ORDER = ['BIRT', 'CHR', 'CONF', 'FCOM', 'EDUC', 'OCCU', 'PROP', 'RESI', 'EVEN', 'WILL', 'DEAT', 'BURI'];
 
 const MONTHS: Record<string, string> = {
 	jan: '01', feb: '02', mär: '03', mar: '03', apr: '04', mai: '05', may: '05', jun: '06',
@@ -140,6 +153,17 @@ const isHiddenEvent = (e: VaultEvent) => !!e.privacy && (/sensitiv/i.test(e.priv
 export function writeGedcom(r: CheckResult, opts: WriterOptions): WriterResult {
 	const { model, rel, scope } = r;
 	const inScope = (p?: string): p is string => !!p && scope.included.has(p);
+	const factAsEven = opts.factAsEven ?? true;
+	/** Zuordnung zu GEDCOM: Typ-Notiz, sonst eingebaute Tabelle; ohne Zuordnung (z.B. "Kind") kein Export */
+	const typeDef = (e: VaultEvent): EventTypeDef | undefined => model.eventTypes?.get(e.type) ?? BUILTIN_TYPES[e.type];
+	/** Wert eines Attributs: erstes Property aus `gedcomValue` mit Inhalt */
+	const valueOf = (e: VaultEvent, def: EventTypeDef): string | undefined => {
+		for (const prop of def.gedcomValue ?? []) {
+			const v = e.fields?.[prop] ?? (prop === 'Beschreibung' ? e.description : prop === 'Adresse' ? e.address : undefined);
+			if (v) return v;
+		}
+		return e.occupation ?? e.description;
+	};
 	const persons = [...scope.included].map(p => model.persons.get(p)!).filter(Boolean)
 		.sort((a, b) => (a.id ?? a.path).localeCompare(b.id ?? b.path));
 	const personXref = new Map(persons.map(p => [p.path, xrefOf(p.id, p.basename)]));
@@ -183,7 +207,7 @@ export function writeGedcom(r: CheckResult, opts: WriterOptions): WriterResult {
 	};
 
 	// ── Familien: Paare aus der Prüfung, Kinder aus Geburt/Elternschaft, Heirat aus den Ereignissen
-	interface Fam { xref: string; uid?: string; husb?: string; wife?: string; children: Map<string, string>; marriages: VaultEvent[] }
+	interface Fam { xref: string; uid?: string; husb?: string; wife?: string; children: Map<string, string>; marriages: { tag: string; e: VaultEvent }[] }
 	const families = new Map<string, Fam>();
 	const familyByPath = new Map(model.families.map(f => [f.path, f]));
 	for (const n of r.families.needed) {
@@ -206,12 +230,14 @@ export function writeGedcom(r: CheckResult, opts: WriterOptions): WriterResult {
 		if (!fam.children.has(pair.child) || pedi === 'birth') fam.children.set(pair.child, pedi);
 	}
 	const sex = (p: string) => model.persons.get(p)?.sex;
+	// Paar-Ereignisse (Heirat, Verlobung, Ehevertrag …): Im Vault zwischen zwei Personen, in GEDCOM an der FAM des Paares
 	for (const e of model.events) {
-		if (e.type !== 'Heirat' || e.persons.length !== 2 || isHiddenEvent(e)) continue;
+		const tag = typeDef(e)?.gedcom;
+		if (!tag || !FAMILY_TAGS.has(tag) || e.persons.length !== 2 || isHiddenEvent(e)) continue;
 		const [a, b] = e.persons as [string, string];
 		const aIsWife = sex(a) === 'F' || (sex(a) !== 'M' && sex(b) === 'M');
 		const [father, mother] = aIsWife ? [b, a] : [a, b];
-		families.get(pairKey(father, mother))?.marriages.push(e);
+		families.get(pairKey(father, mother))?.marriages.push({ tag, e });
 	}
 	const exported = [...families.values()].filter(f => f.husb || f.wife || f.children.size > 0)
 		.filter(f => (f.husb ? 1 : 0) + (f.wife ? 1 : 0) + f.children.size >= 2);
@@ -226,7 +252,8 @@ export function writeGedcom(r: CheckResult, opts: WriterOptions): WriterResult {
 	// ── Ereignisse je Person
 	const eventsOf = new Map<string, VaultEvent[]>();
 	for (const e of model.events) {
-		if (isHiddenEvent(e) || !INDI_EVENTS[e.type]) continue;
+		const tag = typeDef(e)?.gedcom;
+		if (isHiddenEvent(e) || !tag || tag === '-' || FAMILY_TAGS.has(tag)) continue;
 		for (const p of e.persons) if (inScope(p)) eventsOf.set(p, [...(eventsOf.get(p) ?? []), e]);
 	}
 	const religionOf = new Map<string, string>();
@@ -283,31 +310,40 @@ export function writeGedcom(r: CheckResult, opts: WriterOptions): WriterResult {
 		else out.push(line(1, 'SEX', 'U'));
 
 		const events = (eventsOf.get(p.path) ?? []).slice().sort((a, b) =>
-			TAG_ORDER.indexOf(INDI_EVENTS[a.type]!.tag) - TAG_ORDER.indexOf(INDI_EVENTS[b.type]!.tag)
+			tagRank(typeDef(a)!.gedcom) - tagRank(typeDef(b)!.gedcom)
 			|| (dateLinkToEdtf(a.date) ?? '').localeCompare(dateLinkToEdtf(b.date) ?? ''));
 		let hasDeath = false;
 		for (const e of events) {
-			const map = INDI_EVENTS[e.type]!;
-			// Attribute (OCCU, EDUC, PROP) brauchen einen Wert; EVEN bekommt die Beschreibung als Text
-			const value = map.value
-				? (e.occupation ?? e.kind ?? e.description ?? (map.tag === 'PROP' ? 'Grundbesitz' : ''))
-				: map.tag === 'EVEN' ? (e.description ?? '') : '';
-			if (map.value && !value) continue;
+			const def = typeDef(e)!;
+			let tag = def.gedcom;
+			let type = def.gedcomType;
+			let value: string | undefined;
+			if (tag === 'RESI') {
+				value = undefined; // in 5.5.1 ohne Wert; Adresse/Beschreibung kommt als ADDR
+			} else if (ATTRIBUTE_TAGS.has(tag)) {
+				// Attribut: Wert aus `gedcomValue`, sonst der Name des Typs (z.B. "Grundbesitz")
+				value = valueOf(e, def) ?? type ?? e.type;
+			} else if (tag === 'EVEN') {
+				value = e.description;
+				type = type ?? e.kind ?? 'Ereignis';
+			}
+			if (tag === 'FACT' && factAsEven) tag = 'EVEN';
 			const start = out.length;
-			out.push(line(1, map.tag, clip(value) || undefined));
-			const type = map.type ?? (map.tag === 'EVEN' ? (e.kind ?? 'Ereignis') : undefined);
-			if (type) out.push(line(2, 'TYPE', clip(type, 90)));
+			out.push(line(1, tag, clip(value) || undefined));
+			if (type && (tag === 'EVEN' || tag === 'FACT')) out.push(line(2, 'TYPE', clip(type, 90)));
 			let date = dateLinkToGedcom(e.date);
-			if (map.tag === 'DEAT') {
+			if (tag === 'DEAT') {
 				hasDeath = true;
 				if (!date) date = deathEstimate(p.path);
 			}
 			if (date) out.push(line(2, 'DATE', date));
-			// Wohnort: Adresse oder Beschreibung (z.B. "DP Assembly Center Kempten") als Adresse
-			out.push(...placeLines(e, 2, map.tag === 'RESI' ? (e.address ?? e.description) : undefined));
-			if (out.length === start + 1) {
-				// Ereignis ohne Datum und Ort: Tod als "DEAT Y", alles andere weglassen
-				if (map.tag === 'DEAT') out[start] = '1 DEAT Y';
+			// Wohnort: Wert (Adresse, Beschreibung) als Adresse, z.B. "DP Assembly Center Kempten"
+			out.push(...placeLines(e, 2, tag === 'RESI' ? valueOf(e, def) : undefined));
+			// Taufe: Konfession des Ereignisses
+			if ((tag === 'CHR' || tag === 'BAPM') && e.religion) out.push(line(2, 'RELI', e.religion));
+			if (out.length === start + 1 && !value) {
+				// Ereignis ohne Datum, Ort und Wert: Tod als "DEAT Y", alles andere weglassen
+				if (tag === 'DEAT') out[start] = '1 DEAT Y';
 				else out.length = start;
 			}
 		}
@@ -328,12 +364,13 @@ export function writeGedcom(r: CheckResult, opts: WriterOptions): WriterResult {
 		if (f.husb) out.push(line(1, 'HUSB', personXref.get(f.husb)));
 		if (f.wife) out.push(line(1, 'WIFE', personXref.get(f.wife)));
 		for (const c of f.children.keys()) out.push(line(1, 'CHIL', personXref.get(c)));
-		for (const m of f.marriages) {
-			out.push('1 MARR');
+		for (const { tag, e: m } of f.marriages) {
+			const start = out.length;
+			out.push(line(1, tag));
 			const date = dateLinkToGedcom(m.date);
 			if (date) out.push(line(2, 'DATE', date));
 			out.push(...placeLines(m, 2));
-			if (!date && !m.place) out[out.length - 1] = '1 MARR Y';
+			if (out.length === start + 1) out[start] = line(1, tag, 'Y');
 		}
 		if (f.uid) out.push(line(1, '_UID', f.uid.toLowerCase()));
 	}
