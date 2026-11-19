@@ -31,7 +31,12 @@ export function collectVaultModel(app: App, exclude: Set<string> = new Set()): V
 		return cache.getFirstLinkpathDest(link.target, source.path)?.path;
 	};
 
-	const model: VaultModel = { persons: new Map(), events: [], families: [], places: new Map(), eventTypes: new Map() };
+	const model: VaultModel = {
+		persons: new Map(), events: [], families: [], places: new Map(), eventTypes: new Map(),
+		citations: new Map(), sources: new Map(), repositories: new Map(),
+	};
+	const firstAlias = (fm: FrontMatterCache, file: TFile) => asArray(fm['aliases']).map(String).find(a => a.trim() && !/^[A-Z]\d+$/.test(a.trim()))?.trim() ?? file.basename;
+	const firstUrl = (fm: FrontMatterCache) => asArray(fm['Url']).map(String).find(u => /^https?:/.test(u.trim()))?.trim();
 	for (const file of app.vault.getMarkdownFiles()) {
 		if (exclude.has(file.path)) continue;
 		const fm = cache.getFileCache(file)?.frontmatter;
@@ -67,6 +72,9 @@ export function collectVaultModel(app: App, exclude: Set<string> = new Set()): V
 				description: linkText(fm['Beschreibung']),
 				address: str(fm['Adresse']),
 				fields: textFields(fm),
+				evidence: asArray(fm['Beleg']).map(v => resolve(v, file)).filter((p): p is string => !!p),
+				confidence: linkTarget(fm['Konfidenz']),
+				note: linkText(fm['Anmerkung']),
 				occupation: linkText(fm['Beruf']) ?? linkText(fm['Beschreibung']),
 				kind: linkText(fm['Art']),
 				religion: linkTarget(fm['Konfession']) ?? str(fm['Konfession']),
@@ -83,6 +91,31 @@ export function collectVaultModel(app: App, exclude: Set<string> = new Set()): V
 				mother: resolve(fm['Mutter'], file),
 			};
 			model.families.push(family);
+		} else if (hasTag(tags, 'Fundstellen')) {
+			model.citations!.set(file.path, {
+				path: file.path,
+				id: str(fm['id']),
+				title: firstAlias(fm, file),
+				source: resolve(asArray(fm['Quelle'])[0], file),
+				description: linkText(fm['Beschreibung']),
+				url: firstUrl(fm),
+				date: str(fm['Datum']),
+			});
+		} else if (hasTag(tags, 'Quellen')) {
+			model.sources!.set(file.path, {
+				path: file.path,
+				id: str(fm['id']),
+				title: linkText(fm['Titel']) ?? firstAlias(fm, file),
+				url: firstUrl(fm),
+				repository: resolve(asArray(fm['Repository'])[0], file),
+			});
+		} else if (hasTag(tags, 'Aufbewahrungsorte')) {
+			model.repositories!.set(file.path, {
+				path: file.path,
+				id: str(fm['id']),
+				name: firstAlias(fm, file).replace(/^@/, ''),
+				url: firstUrl(fm),
+			});
 		} else if (hasTag(tags, 'System/Ereignistyp') && str(fm['gedcom'])) {
 			const def = {
 				gedcom: str(fm['gedcom'])!.toUpperCase(),

@@ -206,6 +206,33 @@ export function writeGedcom(r: CheckResult, opts: WriterOptions): WriterResult {
 		return out;
 	};
 
+	// ── Quellen: Fundstelle → Quellenangabe am Ereignis, Quelle → SOUR, Aufbewahrungsort → REPO
+	const QUAY: Record<string, string> = { Beurkundet: '3', Gesichert: '2', Nachgewiesen: '2', Abgeleitet: '1', Geschätzt: '0' };
+	const usedSources = new Set<string>();
+	const sourceXref = (path: string) => xrefOf(model.sources?.get(path)?.id, `S${path.length}`);
+	const citationLines = (e: VaultEvent, level: number): string[] => {
+		const out: string[] = [];
+		const quay = e.confidence ? QUAY[e.confidence] : undefined;
+		for (const ev of e.evidence ?? []) {
+			const cit = model.citations?.get(ev);
+			const sourcePath = cit ? cit.source : model.sources?.has(ev) ? ev : undefined;
+			if (!sourcePath || !model.sources?.has(sourcePath)) continue;
+			usedSources.add(sourcePath);
+			out.push(line(level, 'SOUR', sourceXref(sourcePath)));
+			if (cit) {
+				// Seitenangabe: Bezeichnung der Fundstelle, dazu Beschreibung (Seite) bzw. bei Regeln die Anmerkung des Ereignisses
+				const isRule = /regel/i.test(cit.title) || model.sources.get(sourcePath)?.title === 'Basisregelwerk';
+				const extra = isRule ? e.note : cit.description;
+				out.push(line(level + 1, 'PAGE', clip([cit.title, extra].filter(Boolean).join('; '), 240)));
+				const date = dateLinkToGedcom(cit.date);
+				if (date && !isRule) out.push(line(level + 1, 'DATA'), line(level + 2, 'DATE', date));
+				if (cit.url) out.push(line(level + 1, '_LINK', cit.url));
+			}
+			if (quay) out.push(line(level + 1, 'QUAY', quay));
+		}
+		return out;
+	};
+
 	// ── Familien: Paare aus der Prüfung, Kinder aus Geburt/Elternschaft, Heirat aus den Ereignissen
 	interface Fam { xref: string; uid?: string; husb?: string; wife?: string; children: Map<string, string>; marriages: { tag: string; e: VaultEvent }[] }
 	const families = new Map<string, Fam>();
@@ -341,7 +368,9 @@ export function writeGedcom(r: CheckResult, opts: WriterOptions): WriterResult {
 			out.push(...placeLines(e, 2, tag === 'RESI' ? valueOf(e, def) : undefined));
 			// Taufe: Konfession des Ereignisses
 			if ((tag === 'CHR' || tag === 'BAPM') && e.religion) out.push(line(2, 'RELI', e.religion));
-			if (out.length === start + 1 && !value) {
+			const beforeSources = out.length;
+			out.push(...citationLines(e, 2));
+			if (beforeSources === start + 1 && !value) {
 				// Ereignis ohne Datum, Ort und Wert: Tod als "DEAT Y", alles andere weglassen
 				if (tag === 'DEAT') out[start] = '1 DEAT Y';
 				else out.length = start;
@@ -371,8 +400,26 @@ export function writeGedcom(r: CheckResult, opts: WriterOptions): WriterResult {
 			if (date) out.push(line(2, 'DATE', date));
 			out.push(...placeLines(m, 2));
 			if (out.length === start + 1) out[start] = line(1, tag, 'Y');
+			out.push(...citationLines(m, 2));
 		}
 		if (f.uid) out.push(line(1, '_UID', f.uid.toLowerCase()));
+	}
+	// Quellen- und Archiv-Datensätze (nur die, auf die eine Quellenangabe verweist)
+	const usedRepos = new Set<string>();
+	for (const path of [...usedSources].sort((a, b) => sourceXref(a).localeCompare(sourceXref(b)))) {
+		const s = model.sources!.get(path)!;
+		out.push(`0 ${sourceXref(path)} SOUR`, line(1, 'TITL', clip(s.title, 240)));
+		if (s.url) out.push(line(1, '_LINK', s.url));
+		const repo = s.repository ? model.repositories?.get(s.repository) : undefined;
+		if (repo) {
+			usedRepos.add(repo.path);
+			out.push(line(1, 'REPO', xrefOf(repo.id, `R${repo.path.length}`)));
+		}
+	}
+	for (const path of [...usedRepos].sort()) {
+		const repo = model.repositories!.get(path)!;
+		out.push(`0 ${xrefOf(repo.id, `R${path.length}`)} REPO`, line(1, 'NAME', clip(repo.name, 90)));
+		if (repo.url) out.push(line(1, 'WWW', repo.url));
 	}
 	out.push('0 TRLR');
 

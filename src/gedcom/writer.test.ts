@@ -159,3 +159,36 @@ describe('writeGedcom: Zuordnung über die Typ-Notizen', () => {
 		expect(text.slice(text.indexOf('0 @F0001@ FAM'))).toContain('1 ENGA\r\n2 DATE 1848');
 	});
 });
+
+describe('writeGedcom: Quellen', () => {
+	const p = 'Bayrle, Joseph I0453.md';
+	const model: VaultModel = {
+		persons: new Map([[p, { path: p, basename: 'Bayrle, Joseph I0453', id: 'I0453', kekule: true, xrefs: [], sex: 'M' }]]),
+		events: [
+			{ path: 'E1', basename: 'E1', type: 'Geburt', persons: [p], date: '[[1837-03-08|08.03.1837]]', evidence: ['C1'], confidence: 'Gesichert' },
+			{ path: 'E2', basename: 'E2', type: 'Tod', persons: [p], evidence: ['C2'], confidence: 'Abgeleitet', note: 'Geboren 1837' },
+		],
+		families: [],
+		places: new Map(),
+		citations: new Map([
+			['C1', { path: 'C1', id: 'C00058', title: 'Joseph Bayrle u. Barbara Gumpp 27.11.1866 (Heiratseintrag)', source: 'S1', description: 'S.28', url: 'https://data.matricula-online.eu/x/?pg=28', date: '[[1866-11-27|27.11.1866]]' }],
+			['C2', { path: 'C2', id: 'C00010', title: 'Person älter 100 Jahre (Regel)', source: 'S0' }],
+		]),
+		sources: new Map([
+			['S1', { path: 'S1', id: 'S00237', title: 'Wolferstadt, Trauungen 12-01, 1851-1920', url: 'https://data.matricula-online.eu/x/', repository: 'R1' }],
+			['S0', { path: 'S0', id: 'S00001', title: 'Basisregelwerk' }],
+		]),
+		repositories: new Map([['R1', { path: 'R1', id: 'R0059', name: 'Kirchenbücher Wolferstadt', url: 'https://data.matricula-online.eu/w/' }]]),
+	};
+	const { text } = writeGedcom(runChecks(model, { currentYear: 2026, livingYears: 100 }), { created: new Date(2026, 10, 19), version: 'test' });
+
+	it('schreibt Quellenangaben mit Seite, Link und Verlässlichkeit', () => {
+		expect(text).toContain('1 BIRT\r\n2 DATE 8 MAR 1837\r\n2 SOUR @S00237@\r\n3 PAGE Joseph Bayrle u. Barbara Gumpp 27.11.1866 (Heiratseintrag); S.28\r\n3 DATA\r\n4 DATE 27 NOV 1866\r\n3 _LINK https://data.matricula-online.eu/x/?pg=28\r\n3 QUAY 2');
+	});
+
+	it('schreibt Regeln mit Begründung und die Quellen- und Archiv-Datensätze', () => {
+		expect(text).toContain('2 SOUR @S00001@\r\n3 PAGE Person älter 100 Jahre (Regel); Geboren 1837\r\n3 QUAY 1');
+		expect(text).toContain('0 @S00237@ SOUR\r\n1 TITL Wolferstadt, Trauungen 12-01, 1851-1920\r\n1 _LINK https://data.matricula-online.eu/x/\r\n1 REPO @R0059@');
+		expect(text).toContain('0 @R0059@ REPO\r\n1 NAME Kirchenbücher Wolferstadt\r\n1 WWW https://data.matricula-online.eu/w/');
+	});
+});

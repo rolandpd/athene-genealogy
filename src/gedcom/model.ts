@@ -49,6 +49,12 @@ export interface VaultEvent {
 	address?: string;
 	/** alle Properties als Text (Wikilink → Anzeige), für die Werte aus `gedcomValue` */
 	fields?: Record<string, string>;
+	/** Pfade aus `Beleg` (Fundstellen, manchmal direkt Quellen) */
+	evidence?: string[];
+	/** Konfidenz als Linkziel, z. B. "Beurkundet" */
+	confidence?: string;
+	/** `Anmerkung`, z. B. Begründung einer Schätzung ("Geboren 1869") */
+	note?: string;
 	/** Beruf als Text: Anzeige des Beruf-Links, sonst Beschreibung */
 	occupation?: string;
 	/** Art, z. B. "Adoption" bei Elternschaft */
@@ -70,6 +76,39 @@ export interface VaultPlace {
 	/** aus `location: [48.3876, 10.437]` */
 	lat?: number;
 	long?: number;
+}
+
+/** Fundstelle (C…): konkrete Stelle in einer Quelle */
+export interface VaultCitation {
+	path: string;
+	id?: string;
+	/** Bezeichnung (erster Alias), z. B. "Johannes Ev. Mayr ≈17.08.1869 (Taufeintrag)" */
+	title: string;
+	/** Pfad der Quelle */
+	source?: string;
+	/** `Beschreibung`, z. B. Seite "S.58" */
+	description?: string;
+	url?: string;
+	/** Datum der Fundstelle (Datumslink) */
+	date?: string;
+}
+
+/** Quelle (S…) */
+export interface VaultSource {
+	path: string;
+	id?: string;
+	title: string;
+	url?: string;
+	/** Pfad des (ersten) Aufbewahrungsorts */
+	repository?: string;
+}
+
+/** Aufbewahrungsort (R…) */
+export interface VaultRepository {
+	path: string;
+	id?: string;
+	name: string;
+	url?: string;
 }
 
 /** Technische Zuordnung eines Ereignistyps aus `System/Ereignistyp/<Typ>` zu GEDCOM. */
@@ -98,6 +137,9 @@ export interface VaultModel {
 	places?: Map<string, VaultPlace>;
 	/** Ereignistypen nach Name und Aliasen */
 	eventTypes?: Map<string, EventTypeDef>;
+	citations?: Map<string, VaultCitation>;
+	sources?: Map<string, VaultSource>;
+	repositories?: Map<string, VaultRepository>;
 }
 
 /** Person aus einer GEDCOM-Datei (nur die für den Abgleich nötigen Felder). */
