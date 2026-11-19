@@ -32,6 +32,7 @@ describe('dateLinkToGedcom', () => {
 describe('Namen', () => {
 	it('zerlegt den Dateinamen', () => {
 		expect(nameParts('Wiedenbauer, Maria Anna I0301')).toEqual({ given: 'Maria Anna', surname: 'Wiedenbauer' });
+		expect(nameParts('Bunk, Anselm i0762')).toEqual({ given: 'Anselm', surname: 'Bunk' });
 	});
 
 	it('liest Heiratsnamen aus den Aliasen', () => {

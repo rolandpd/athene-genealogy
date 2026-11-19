@@ -97,10 +97,18 @@ export interface ReferenceMatch {
 	candidates: string[];
 }
 
+/**
+ * Dateiname einer Person: "Nachname, Vorname(n) I0000" (Nachname = Geburtsname).
+ * Ohne Komma oder mit kleinem "i" in der ID lassen sich Vor- und Nachname nicht sicher bestimmen.
+ */
+export function isWellFormedPersonName(basename: string): boolean {
+	return /^[^,]+,\s*\S.*\sI\d{4,}$/.test(basename.trim());
+}
+
 /** "Anna Maria /Baumann/" und "Baumann, Anna Maria I0002" → "anna baumann maria" */
 export function nameKey(name: string): string {
 	return name
-		.replace(/\s+I\d+$/, '')
+		.replace(/\s+I\d+$/i, '')
 		.toLowerCase()
 		.replace(/[/,]/g, ' ')
 		.split(/\s+/)
@@ -494,6 +502,8 @@ export interface CheckResult {
 		staleRef: string[];
 	};
 	withoutUuid: string[];
+	/** im Umfang, aber Dateiname nicht im Format "Nachname, Vorname(n) I0000" → Name nicht bestimmbar */
+	badNames: string[];
 	/** gleiche UID bei mehreren Personen (alle Personen, nicht nur der Umfang) */
 	duplicateUids: string[][];
 	/** UID vorhanden, aber kein gültiges Format */
@@ -514,6 +524,7 @@ export function runChecks(model: VaultModel, opts: CheckOptions, reference?: Ged
 	const result: CheckResult = {
 		model, rel, scope,
 		withoutUuid: [...scope.included].filter(p => !model.persons.get(p)?.uuid),
+		badNames: [...scope.included].filter(p => !isWellFormedPersonName(model.persons.get(p)?.basename ?? '')),
 		...checkUids(model),
 		living: checkLiving(model, rel, opts),
 		dateLinks: checkDateLinks(model),

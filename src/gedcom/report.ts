@@ -71,6 +71,7 @@ export function exportBlockers(r: CheckResult): [string, number][] {
 		['Datumslinks fehlerhaft', blockingDateLinks(r).length],
 		['Familien fehlen oder unvollständig', r.families.missing.length + r.families.incomplete.length + r.families.withoutUuid.length],
 		['UID fehlt, doppelt oder ungültig', r.withoutUuid.length + r.duplicateUids.length + r.invalidUids.length],
+		['Name nicht bestimmbar (Dateiname)', r.badNames.length],
 	];
 }
 
@@ -238,6 +239,9 @@ function uids({ r, link, list, sortByName, todo }: Ctx): string[] {
 	out.push(`### Im Umfang ohne \`uuid\` (${r.withoutUuid.length})`, '');
 	out.push('Command „Fehlende UIDs für Personen vergeben“ ausführen.', '');
 	out.push(list(sortByName(r.withoutUuid).map(p => `${todo}${link(p)}`), 20));
+	out.push(`### Name nicht bestimmbar (${r.badNames.length})`, '');
+	out.push('Der Dateiname muss „Nachname, Vorname(n) I0000“ lauten (Nachname = Geburtsname), sonst fehlt in GEDCOM der Nachname. Datei in Obsidian umbenennen.', '');
+	out.push(list(sortByName(r.badNames).map(p => `${todo}${link(p)}`)));
 	return out;
 }
 

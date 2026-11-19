@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { checkDateLink, computeScope, buildRelations, matchReference, nameKey, runChecks, checkFamilies } from './checks';
+import { checkDateLink, computeScope, buildRelations, matchReference, nameKey, runChecks, checkFamilies, isWellFormedPersonName } from './checks';
 import { readGedcomIndividuals } from './gedcomReader';
 import { planXrefUpdates } from './xrefPlan';
 import { normalizeEventType, type VaultEvent, type VaultModel, type VaultPerson } from './model';
@@ -271,5 +271,20 @@ describe('Export-Umfang über mehrere Generationen', () => {
 		expect([...scope.included].sort()).toEqual(['ahn.md', 'cousin.md', 'onkel.md', 'tante.md']);
 		expect(scope.living).toEqual(['lebend.md']);
 		expect(scope.connected.has('schwiegervater.md')).toBe(false);
+	});
+});
+
+describe('Namen aus dem Dateinamen', () => {
+	it('erkennt gültige und ungültige Dateinamen', () => {
+		expect(isWellFormedPersonName('Durner, Xaver I0751')).toBe(true);
+		expect(isWellFormedPersonName('Mayr, Franz Xaver I0125')).toBe(true);
+		expect(isWellFormedPersonName('Kepeler Barbara I0522')).toBe(false);
+		expect(isWellFormedPersonName('Bunk, Anselm i0762')).toBe(false);
+		expect(isWellFormedPersonName('Xaver Durner')).toBe(false);
+	});
+
+	it('meldet ungültige Namen im Umfang als Hindernis', () => {
+		const m = model([person('Kepeler Barbara I0522.md', { kekule: true })], []);
+		expect(runChecks(m, OPTS).badNames).toEqual(['Kepeler Barbara I0522.md']);
 	});
 });

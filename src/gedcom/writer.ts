@@ -123,7 +123,7 @@ export function dateLinkToGedcom(raw: string | undefined): string | undefined {
 
 /** "Wiedenbauer, Maria Anna I0301" → { given: "Maria Anna", surname: "Wiedenbauer" } */
 export function nameParts(basename: string): { given: string; surname: string } {
-	const name = basename.replace(/\s+I\d+$/, '').trim();
+	const name = basename.replace(/\s+I\d+$/i, '').trim();
 	const comma = name.indexOf(',');
 	if (comma < 0) return { given: name, surname: '' };
 	return { surname: name.slice(0, comma).trim(), given: name.slice(comma + 1).trim() };
