@@ -6,6 +6,8 @@ const tagsOf = (fm: FrontMatterCache): string[] => asArray(fm.tags).map(String);
 const hasTag = (tags: string[], root: string) => tags.some(t => t === root || t.startsWith(root + '/'));
 /** "[[Klärungsbedarf|🔴]]" → "Klärungsbedarf" */
 const linkTarget = (v: unknown): string | undefined => (typeof v === 'string' ? parseWikilink(v)?.target : undefined);
+/** Erster Ort = Ort des Ereignisses, die weiteren sind genauere Angaben (Hof, Kirche). */
+const places = (paths: string[]) => ({ place: paths[0], placeDetails: paths.length > 1 ? paths.slice(1) : undefined });
 const str = (v: unknown): string | undefined => (typeof v === 'string' && v.trim() ? v.trim() : typeof v === 'number' ? String(v) : undefined);
 
 /**
@@ -51,7 +53,10 @@ export function collectVaultModel(app: App, exclude: Set<string> = new Set()): V
 				mother: resolve(fm['Mutter'], file),
 				date: str(fm['Datum']),
 				status: linkTarget(fm['status']),
-				place: resolve(fm['Ort'], file),
+				...places(asArray(fm['Ort']).map(v => resolve(v, file)).filter((p): p is string => !!p)),
+				placeText: asArray(fm['Ort']).find((v): v is string => typeof v === 'string' && !!v.trim() && !parseWikilink(v))?.trim(),
+				description: linkText(fm['Beschreibung']),
+				address: str(fm['Adresse']),
 				occupation: linkText(fm['Beruf']) ?? linkText(fm['Beschreibung']),
 				kind: linkText(fm['Art']),
 				religion: linkTarget(fm['Konfession']) ?? str(fm['Konfession']),
@@ -69,10 +74,15 @@ export function collectVaultModel(app: App, exclude: Set<string> = new Set()): V
 			};
 			model.families.push(family);
 		} else if (hasTag(tags, 'Orte')) {
+			const loc = asArray(fm['location']).flatMap(v => String(v).replace(/[[\]\s]/g, '').split(',')).map(Number);
+			const gov = asArray(fm['xrefs']).map(String).map(x => x.match(/gov\.genealogy\.net\/(?:item\/show\/)?([A-Za-z0-9_-]+)/)?.[1]).find(Boolean);
 			model.places!.set(file.path, {
 				path: file.path,
 				name: file.basename.replace(/\s+P\d+$/, ''),
 				address: str(fm['address']),
+				gov,
+				lat: loc.length === 2 && Number.isFinite(loc[0]) ? loc[0] : undefined,
+				long: loc.length === 2 && Number.isFinite(loc[1]) ? loc[1] : undefined,
 			});
 		}
 	}

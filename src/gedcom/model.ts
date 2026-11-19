@@ -37,8 +37,16 @@ export interface VaultEvent {
 	date?: string;
 	/** Bearbeitungsstatus als Linkziel, z. B. "Klärungsbedarf" */
 	status?: string;
-	/** Pfad der Ort-Notiz */
+	/** Pfad der Ort-Notiz (erster Eintrag von `Ort`, meist die Gemeinde) */
 	place?: string;
+	/** weitere, genauere Orte aus `Ort` (Hof, Kirche) */
+	placeDetails?: string[];
+	/** `Ort` als Freitext ohne Ort-Notiz, z.B. "KL Buchenwald (bei Weimar)" */
+	placeText?: string;
+	/** `Beschreibung` als Text */
+	description?: string;
+	/** `Adresse` (beim Wohnort) */
+	address?: string;
 	/** Beruf als Text: Anzeige des Beruf-Links, sonst Beschreibung */
 	occupation?: string;
 	/** Art, z. B. "Adoption" bei Elternschaft */
@@ -55,6 +63,11 @@ export interface VaultPlace {
 	name: string;
 	/** z. B. "DE-86459 Wollishausen" */
 	address?: string;
+	/** GOV-Kennung aus `xrefs` (http://gov.genealogy.net/<ID>) */
+	gov?: string;
+	/** aus `location: [48.3876, 10.437]` */
+	lat?: number;
+	long?: number;
 }
 
 export interface VaultFamily {

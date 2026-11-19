@@ -245,3 +245,31 @@ describe('Rückabgleich xrefs', () => {
 		expect(rr.reference?.matches[0]).toMatchObject({ person: 'Mayr, Josef I0003.md', via: 'xref' });
 	});
 });
+
+describe('Export-Umfang über mehrere Generationen', () => {
+	const m = model(
+		[
+			person('ahn.md', { kekule: true, sex: 'M' }),
+			person('onkel.md', { sex: 'M' }),
+			person('tante.md', { sex: 'F' }),
+			person('cousin.md', { sex: 'M' }),
+			person('lebend.md', { sex: 'F' }),
+			person('schwiegervater.md', { sex: 'M' }),
+		],
+		[
+			event('E1', 'Geburt', ['onkel.md'], '[[1860|1860]]', { father: 'ahn.md' }),
+			event('E2', 'Heirat', ['onkel.md', 'tante.md'], '[[1890|1890]]'),
+			event('E3', 'Geburt', ['cousin.md'], '[[1894|1894]]', { father: 'onkel.md', mother: 'tante.md' }),
+			event('E4', 'Tod', ['ahn.md', 'onkel.md', 'tante.md', 'cousin.md'], '[[1950|1950]]'),
+			event('E5', 'Geburt', ['lebend.md'], '[[1960|1960]]', { father: 'cousin.md' }),
+			event('E6', 'Geburt', ['ahn.md'], '[[1830|1830]]'),
+			event('E7', 'Heirat', ['lebend.md', 'schwiegervater.md'], '[[1985|1985]]'),
+		],
+	);
+	it('nimmt alle verbundenen Personen auf, sucht aber nicht über Lebende weiter', () => {
+		const scope = computeScope(m, buildRelations(m), [], OPTS);
+		expect([...scope.included].sort()).toEqual(['ahn.md', 'cousin.md', 'onkel.md', 'tante.md']);
+		expect(scope.living).toEqual(['lebend.md']);
+		expect(scope.connected.has('schwiegervater.md')).toBe(false);
+	});
+});

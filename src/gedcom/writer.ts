@@ -48,6 +48,17 @@ const INDI_EVENTS: Record<string, { tag: string; type?: string; value?: boolean 
 	Inhaftierung: { tag: 'EVEN', type: 'Inhaftierung' },
 	Mitgliedschaft: { tag: 'EVEN', type: 'Mitgliedschaft' },
 	Krankensalbung: { tag: 'EVEN', type: 'Krankensalbung' },
+	Amt: { tag: 'EVEN', type: 'Amt' },
+	// generisch: TYPE aus `Art`, sonst "Ereignis"; Text aus `Beschreibung`
+	Sonstiges: { tag: 'EVEN' },
+	Ereignis: { tag: 'EVEN' },
+};
+/** GEDCOM-Zeilen dürfen höchstens 255 Zeichen lang sein. */
+/** Freitext für GEDCOM: Wikilinks auflösen ("[[C01386]]" → "C01386", "[[Ziel|Anzeige]]" → "Anzeige"), höchstens `max` Zeichen. */
+const clip = (s: string | undefined, max = 200) => {
+	if (!s) return s;
+	const plain = s.replace(/\[\[([^\]|]+)(?:\|([^\]]*))?\]\]/g, (_m, target: string, display?: string) => display || target).replace(/\s+/g, ' ').trim();
+	return plain.length > max ? plain.slice(0, max - 1) + '…' : plain;
 };
 const TAG_ORDER = ['BIRT', 'CHR', 'CONF', 'FCOM', 'EDUC', 'OCCU', 'PROP', 'RESI', 'EVEN', 'WILL', 'DEAT', 'BURI'];
 
@@ -139,14 +150,35 @@ export function writeGedcom(r: CheckResult, opts: WriterOptions): WriterResult {
 		const head = plac.split(',')[0]!.trim();
 		refPlaces.set(head, [...new Set([...(refPlaces.get(head) ?? []), plac])]);
 	}
-	const placeLines = (path: string | undefined, level: number): string[] => {
-		const place = path ? model.places?.get(path) : undefined;
-		if (!place) return [];
+	const placeLines = (e: { place?: string; placeDetails?: string[]; placeText?: string }, level: number, extraAddress?: string): string[] => {
+		const place = e.place ? model.places?.get(e.place) : undefined;
+		if (!place) {
+			// Ort als Freitext (ohne Ort-Notiz), z.B. "KL Buchenwald (bei Weimar)"
+			if (!e.placeText) return extraAddress ? [line(level, 'ADDR', clip(extraAddress))] : [];
+			const out = [line(level, 'PLAC', clip(e.placeText))];
+			if (extraAddress) out.push(line(level, 'ADDR'), line(level + 1, 'ADR1', clip(extraAddress)));
+			return out;
+		}
 		const known = refPlaces.get(place.name);
 		const plac = known?.length === 1 ? known[0]! : place.name;
 		const out = [line(level, 'PLAC', plac)];
+		// GEDCOM-L-Erweiterungen unter PLAC: GOV-Kennung und Koordinaten
+		if (place.gov) out.push(line(level + 1, '_GOV', place.gov));
+		if (place.lat !== undefined && place.long !== undefined) {
+			out.push(line(level + 1, 'MAP'),
+				line(level + 2, 'LATI', `${place.lat >= 0 ? 'N' : 'S'}${Math.abs(place.lat)}`),
+				line(level + 2, 'LONG', `${place.long >= 0 ? 'E' : 'W'}${Math.abs(place.long)}`));
+		}
+		// genauere Orte aus `Ort` (Hof, Kirche) als ADR1, PLZ als POST
+		const details = (e.placeDetails ?? []).map(p => model.places?.get(p)?.name).filter((n): n is string => !!n);
+		if (extraAddress) details.push(extraAddress);
 		const post = place.address?.match(/\b([A-Z]{2}-\d{4,5})\b/)?.[1];
-		if (post) out.push(line(level, 'ADDR'), line(level + 1, 'ADR2', plac), line(level + 1, 'POST', post));
+		if (details.length || post) {
+			out.push(line(level, 'ADDR'));
+			if (details.length) out.push(line(level + 1, 'ADR1', clip(details.join(', '))));
+			out.push(line(level + 1, 'ADR2', plac));
+			if (post) out.push(line(level + 1, 'POST', post));
+		}
 		return out;
 	};
 
@@ -256,18 +288,23 @@ export function writeGedcom(r: CheckResult, opts: WriterOptions): WriterResult {
 		let hasDeath = false;
 		for (const e of events) {
 			const map = INDI_EVENTS[e.type]!;
-			const value = map.value ? (e.occupation ?? e.kind ?? '') : '';
+			// Attribute (OCCU, EDUC, PROP) brauchen einen Wert; EVEN bekommt die Beschreibung als Text
+			const value = map.value
+				? (e.occupation ?? e.kind ?? e.description ?? (map.tag === 'PROP' ? 'Grundbesitz' : ''))
+				: map.tag === 'EVEN' ? (e.description ?? '') : '';
 			if (map.value && !value) continue;
 			const start = out.length;
-			out.push(line(1, map.tag, value || undefined));
-			if (map.type) out.push(line(2, 'TYPE', map.type));
+			out.push(line(1, map.tag, clip(value) || undefined));
+			const type = map.type ?? (map.tag === 'EVEN' ? (e.kind ?? 'Ereignis') : undefined);
+			if (type) out.push(line(2, 'TYPE', clip(type, 90)));
 			let date = dateLinkToGedcom(e.date);
 			if (map.tag === 'DEAT') {
 				hasDeath = true;
 				if (!date) date = deathEstimate(p.path);
 			}
 			if (date) out.push(line(2, 'DATE', date));
-			out.push(...placeLines(e.place, 2));
+			// Wohnort: Adresse oder Beschreibung (z.B. "DP Assembly Center Kempten") als Adresse
+			out.push(...placeLines(e, 2, map.tag === 'RESI' ? (e.address ?? e.description) : undefined));
 			if (out.length === start + 1) {
 				// Ereignis ohne Datum und Ort: Tod als "DEAT Y", alles andere weglassen
 				if (map.tag === 'DEAT') out[start] = '1 DEAT Y';
@@ -295,7 +332,7 @@ export function writeGedcom(r: CheckResult, opts: WriterOptions): WriterResult {
 			out.push('1 MARR');
 			const date = dateLinkToGedcom(m.date);
 			if (date) out.push(line(2, 'DATE', date));
-			out.push(...placeLines(m.place, 2));
+			out.push(...placeLines(m, 2));
 			if (!date && !m.place) out[out.length - 1] = '1 MARR Y';
 		}
 		if (f.uid) out.push(line(1, '_UID', f.uid.toLowerCase()));

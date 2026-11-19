@@ -91,7 +91,7 @@ export function renderReport(r: CheckResult, meta: ReportMeta): string {
 	out.push('| Kennzahl | Wert |', '|---|---|');
 	out.push(`| Personen im Vault | ${r.model.persons.size} |`);
 	out.push(`| mit Kekulé-Nummer | ${[...r.model.persons.values()].filter(p => p.kekule).length} |`);
-	out.push(`| Kekulé + direkt verbunden | ${s.connected.size} |`);
+	out.push(`| mit Kekulé-Personen verbunden | ${s.connected.size} |`);
 	if (r.reference) out.push(`| aus GEDBAS übernommen (Bestandsschutz) | ${s.protectedByReference.size} |`);
 	out.push(`| **Export-Umfang** | **${s.included.size}** |`);
 	if (r.reference) out.push(`| davon neu gegenüber GEDBAS | ${[...s.included].filter(p => !s.protectedByReference.has(p)).length} |`);
@@ -152,6 +152,11 @@ function gedbas({ r, meta, link, list, sortByName, todo }: Ctx): string[] {
 	out.push(`### Würden aus GEDBAS herausfallen (${ref.dropped.length})`, '');
 	out.push('In GEDBAS vorhanden, aber nicht mehr im Export-Umfang (ohne Lebend-Regel und Datenschutz).', '');
 	out.push(list(sortByName(ref.dropped).map(p => `${todo}${link(p)}`)));
+
+	const added = sortByName([...r.scope.included].filter(p => !r.scope.protectedByReference.has(p)));
+	out.push(`### Neu gegenüber GEDBAS (${added.length})`, '');
+	out.push('Kommen beim nächsten Upload dazu. Stichprobe: Wer nicht veröffentlicht werden soll, bekommt `Datenschutz: "[[Privat]]"`.', '');
+	out.push(list(added.map(p => `${link(p)} (${r.rel.birthYear.get(p) ?? '?'})`)));
 
 	if (ref.removedByPrivacy.length) {
 		out.push(`### Per Datenschutz aus GEDBAS entfernen (${ref.removedByPrivacy.length})`, '');

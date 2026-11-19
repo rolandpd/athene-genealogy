@@ -154,7 +154,7 @@ export function matchReference(model: VaultModel, rel: Relations, individuals: G
 
 export interface Scope {
 	included: Set<string>;
-	/** Kekulé-Personen und ihre direkten Verwandten */
+	/** mit einer Kekulé-Person verbunden (Eltern, Kinder, Ehepartner, beliebig weit) */
 	connected: Set<string>;
 	/** aus der Referenz übernommen (Bestandsschutz) */
 	protectedByReference: Set<string>;
@@ -198,17 +198,36 @@ export function checkLiving(model: VaultModel, rel: Relations, opts: CheckOption
 	return result;
 }
 
+/**
+ * Export-Umfang: alle Personen, die über Eltern, Kinder und Ehepartner mit einer Kekulé-Person
+ * verbunden sind, dazu die Personen aus der Referenz (Bestandsschutz). Ausgeschlossen werden
+ * Datenschutz Privat/Lebend und die Lebend-Regel. Über ausgeschlossene Personen wird nicht
+ * weitergesucht, damit z.B. die Schwiegerfamilie einer lebenden Person nicht mitkommt.
+ */
 export function computeScope(model: VaultModel, rel: Relations, referenced: Iterable<string>, opts: CheckOptions): Scope {
+	const cutoff = opts.currentYear - opts.livingYears;
+	const blocks = (p: string) => {
+		const person = model.persons.get(p);
+		if (!person) return true;
+		if (isPrivate(person.privacy) || isLivingMark(person.privacy)) return true;
+		const b = rel.birthYear.get(p);
+		return !rel.hasDeath.has(p) && b !== undefined && b > cutoff;
+	};
 	const kekule = [...model.persons.values()].filter(p => p.kekule).map(p => p.path);
 	const connected = new Set(kekule);
-	for (const k of kekule) {
+	const stack = kekule.filter(k => !blocks(k));
+	while (stack.length) {
+		const x = stack.pop()!;
 		for (const map of [rel.parents, rel.children, rel.spouses]) {
-			for (const x of map.get(k) ?? []) connected.add(x);
+			for (const y of map.get(x) ?? []) {
+				if (connected.has(y)) continue;
+				connected.add(y);
+				if (!blocks(y)) stack.push(y);
+			}
 		}
 	}
 	const protectedByReference = new Set(referenced);
 	const candidates = new Set([...connected, ...protectedByReference]);
-	const cutoff = opts.currentYear - opts.livingYears;
 
 	const scope: Scope = { included: new Set(), connected, protectedByReference, excludedByPrivacy: [], living: [], unknownLiving: [] };
 	for (const p of candidates) {
