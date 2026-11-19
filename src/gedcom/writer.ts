@@ -17,8 +17,6 @@ export interface WriterOptions {
 	version: string;
 	/** Name des Einsenders, leer = ohne SUBM-Namen */
 	submitter?: string;
-	/** PLAC-Werte der Referenz-GEDCOM, damit bekannte Orte gleich geschrieben werden ("Wollishausen, BY") */
-	referencePlaces?: string[];
 	/** `FACT` als `EVEN` schreiben, weil GEDBAS `FACT` nicht anzeigt (Standard: true) */
 	factAsEven?: boolean;
 }
@@ -168,12 +166,7 @@ export function writeGedcom(r: CheckResult, opts: WriterOptions): WriterResult {
 		.sort((a, b) => (a.id ?? a.path).localeCompare(b.id ?? b.path));
 	const personXref = new Map(persons.map(p => [p.path, xrefOf(p.id, p.basename)]));
 
-	// ── Orte
-	const refPlaces = new Map<string, string[]>();
-	for (const plac of opts.referencePlaces ?? []) {
-		const head = plac.split(',')[0]!.trim();
-		refPlaces.set(head, [...new Set([...(refPlaces.get(head) ?? []), plac])]);
-	}
+	// ── Orte: PLAC = Name der Ort-Notiz (ohne ID); Kreis/Land kommen später über GOV bzw. die Orts-Hierarchie
 	const placeLines = (e: { place?: string; placeDetails?: string[]; placeText?: string }, level: number, extraAddress?: string): string[] => {
 		const place = e.place ? model.places?.get(e.place) : undefined;
 		if (!place) {
@@ -183,8 +176,7 @@ export function writeGedcom(r: CheckResult, opts: WriterOptions): WriterResult {
 			if (extraAddress) out.push(line(level, 'ADDR'), line(level + 1, 'ADR1', clip(extraAddress)));
 			return out;
 		}
-		const known = refPlaces.get(place.name);
-		const plac = known?.length === 1 ? known[0]! : place.name;
+		const plac = place.name;
 		const out = [line(level, 'PLAC', plac)];
 		// GEDCOM-L-Erweiterungen unter PLAC: GOV-Kennung und Koordinaten
 		if (place.gov) out.push(line(level + 1, '_GOV', place.gov));
@@ -365,7 +357,8 @@ export function writeGedcom(r: CheckResult, opts: WriterOptions): WriterResult {
 			}
 			if (date) out.push(line(2, 'DATE', date));
 			// Wohnort: Wert (Adresse, Beschreibung) als Adresse, z.B. "DP Assembly Center Kempten"
-			out.push(...placeLines(e, 2, tag === 'RESI' ? valueOf(e, def) : undefined));
+			// Adresse (z.B. Hof, Hausnummer) bei allen Ereignissen als ADDR; beim Wohnort notfalls die Beschreibung
+			out.push(...placeLines(e, 2, tag === 'RESI' ? valueOf(e, def) : e.address));
 			// Taufe: Konfession des Ereignisses
 			if ((tag === 'CHR' || tag === 'BAPM') && e.religion) out.push(line(2, 'RELI', e.religion));
 			const beforeSources = out.length;

@@ -11,23 +11,17 @@ import { writeGedcom } from './writer';
  * Bricht ab, solange der Prüfbericht Export-Hindernisse meldet.
  */
 export async function exportGedcom(app: App, settings: AthenePluginSettings, version: string): Promise<void> {
-	const { result, refPath, hasReference } = await runVaultChecks(app, settings);
+	const { result } = await runVaultChecks(app, settings);
 	const blockers = exportBlockers(result).filter(([, n]) => n > 0);
 	if (blockers.length) {
 		new Notice(t('gedcom.exportBlocked', { list: blockers.map(([k, n]) => `${k}: ${n}`).join(', ') }), 10000);
 		return;
 	}
 
-	let referencePlaces: string[] = [];
-	if (hasReference) {
-		const text = await app.vault.adapter.read(refPath);
-		referencePlaces = [...new Set(text.split(/\r?\n/).filter(l => l.startsWith('2 PLAC ')).map(l => l.slice(7).trim()))];
-	}
 	const { text, persons, families, estimatedDeaths } = writeGedcom(result, {
 		created: new Date(),
 		version,
 		submitter: settings.gedcomSubmitter,
-		referencePlaces,
 	});
 
 	// Gegenprobe: jede GEDBAS-Person (außer Datenschutz/Lebend-Regel) muss mit ihrer UID wieder im Export stehen

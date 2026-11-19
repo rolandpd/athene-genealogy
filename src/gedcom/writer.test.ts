@@ -52,7 +52,7 @@ describe('writeGedcom', () => {
 			[priv, person(priv, { id: 'I0004', sex: 'F', privacy: '[[Privat]]', kekule: false })],
 		]),
 		events: [
-			ev('E1', 'Geburt', [k], '[[1850-03-01|01.03.1850]]', { father: v, mother: m, place: 'Orte/Wollishausen P0047.md', placeDetails: ['Orte/Hof P0999.md'] }),
+			ev('E1', 'Geburt', [k], '[[1850-03-01|01.03.1850]]', { father: v, mother: m, place: 'Orte/Wollishausen P0047.md', placeDetails: ['Orte/Hof P0999.md'], address: '[[Wollishausen 3 P1000|Hauptstraße 3]]' }),
 			ev('E2', 'Heirat', [v, m], '[[1849|1849~]]'),
 			ev('E3', 'Geburt', [v], '[[1820|1820?]]'),
 			ev('E4', 'Tod', [m], '[[1890-01-02|02.01.1890]]'),
@@ -68,7 +68,7 @@ describe('writeGedcom', () => {
 		]),
 	};
 	const r = runChecks(model, { currentYear: 2026, livingYears: 100 });
-	const { text, persons, families } = writeGedcom(r, { created: new Date(2026, 10, 17), version: '0.13.0', submitter: 'Test', referencePlaces: ['Wollishausen, BY'] });
+	const { text, persons, families } = writeGedcom(r, { created: new Date(2026, 10, 17), version: '0.13.0', submitter: 'Test' });
 	const lines = text.split('\r\n');
 
 	it('schreibt Personen mit UID und lässt Privat aus', () => {
@@ -87,8 +87,8 @@ describe('writeGedcom', () => {
 		expect(text).toContain('1 FAMC @F0001@\r\n2 PEDI birth');
 	});
 
-	it('übernimmt Ortsnamen aus der Referenz und schreibt Beruf, Konfession', () => {
-		expect(text).toContain('2 PLAC Wollishausen, BY\r\n3 _GOV WOLSENJN58JI\r\n3 MAP\r\n4 LATI N48.32\r\n4 LONG E10.7\r\n2 ADDR\r\n3 ADR1 Wollishausen, Schusterhof\r\n3 ADR2 Wollishausen, BY\r\n3 POST DE-86459');
+	it('schreibt den Namen der Ort-Notiz mit GOV, Koordinaten und Adresse, dazu Beruf und Konfession', () => {
+		expect(text).toContain('2 PLAC Wollishausen\r\n3 _GOV WOLSENJN58JI\r\n3 MAP\r\n4 LATI N48.32\r\n4 LONG E10.7\r\n2 ADDR\r\n3 ADR1 Wollishausen, Schusterhof, Hauptstraße 3\r\n3 ADR2 Wollishausen\r\n3 POST DE-86459');
 		expect(lines).toContain('1 OCCU Bauer');
 		expect(lines).toContain('1 RELI römisch-katholisch');
 	});
