@@ -173,7 +173,7 @@ describe('writeGedcom: Quellen', () => {
 		places: new Map(),
 		citations: new Map([
 			['C1', { path: 'C1', id: 'C00058', title: 'Joseph Bayrle u. Barbara Gumpp 27.11.1866 (Heiratseintrag)', source: 'S1', description: 'S.28', url: 'https://data.matricula-online.eu/x/?pg=28', date: '[[1866-11-27|27.11.1866]]' }],
-			['C2', { path: 'C2', id: 'C00010', title: 'Person älter 100 Jahre (Regel)', source: 'S0' }],
+			['C2', { path: 'C2', id: 'C00010', title: 'Person älter 100 Jahre (Regel)', source: 'S0', description: 'Ist kein Tod bekannt, gilt als verstorben, wer vor über 100 Jahren geboren ist.' }],
 		]),
 		sources: new Map([
 			['S1', { path: 'S1', id: 'S00237', title: 'Wolferstadt, Trauungen 12-01, 1851-1920', url: 'https://data.matricula-online.eu/x/', repository: 'R1' }],
@@ -188,7 +188,7 @@ describe('writeGedcom: Quellen', () => {
 	});
 
 	it('schreibt Regeln mit Begründung und die Quellen- und Archiv-Datensätze', () => {
-		expect(text).toContain('2 SOUR @S00001@\r\n3 PAGE Person älter 100 Jahre (Regel); Geboren 1837\r\n3 QUAY 1');
+		expect(text).toContain('2 SOUR @S00001@\r\n3 PAGE Regel: Person älter 100 Jahre – Ist kein Tod bekannt, gilt als verstorben, wer vor über 100 Jahren geboren ist.; Geboren 1837\r\n3 QUAY 1');
 		expect(text).toContain('0 @S00237@ SOUR\r\n1 TITL Wolferstadt, Trauungen 12-01, 1851-1920\r\n1 _LINK https://data.matricula-online.eu/x/\r\n1 REPO @R0059@');
 		expect(text).toContain('0 @R0059@ REPO\r\n1 NAME Kirchenbücher Wolferstadt\r\n1 WWW https://data.matricula-online.eu/w/');
 	});

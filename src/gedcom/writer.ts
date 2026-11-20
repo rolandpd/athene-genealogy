@@ -214,8 +214,11 @@ export function writeGedcom(r: CheckResult, opts: WriterOptions): WriterResult {
 			if (cit) {
 				// Seitenangabe: Bezeichnung der Fundstelle, dazu Beschreibung (Seite) bzw. bei Regeln die Anmerkung des Ereignisses
 				const isRule = /regel/i.test(cit.title) || model.sources.get(sourcePath)?.title === 'Basisregelwerk';
-				const extra = isRule ? e.note : cit.description;
-				out.push(line(level + 1, 'PAGE', clip([cit.title, extra].filter(Boolean).join('; '), 240)));
+				// Regel: "Regel: Hofübernahme – <Beschreibung der Regel>; <Anmerkung des Ereignisses>"
+				const page = isRule
+					? [`Regel: ${cit.title.replace(/\s*\(Regel\)\s*$/i, '')}${cit.description ? ` – ${cit.description}` : ''}`, e.note]
+					: [cit.title, cit.description];
+				out.push(line(level + 1, 'PAGE', clip(page.filter(Boolean).join('; '), 240)));
 				const date = dateLinkToGedcom(cit.date);
 				if (date && !isRule) out.push(line(level + 1, 'DATA'), line(level + 2, 'DATE', date));
 				if (cit.url) out.push(line(level + 1, '_LINK', cit.url));
