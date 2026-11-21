@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { runChecks } from './checks';
 import { readGedcomIndividuals } from './gedcomReader';
 import type { VaultEvent, VaultModel, VaultPerson } from './model';
-import { dateLinkToGedcom, marriedSurnames, nameParts, writeGedcom } from './writer';
+import { dateLinkToGedcom, line, marriedSurnames, nameParts, writeGedcom } from './writer';
 
 describe('dateLinkToGedcom', () => {
 	it.each([
@@ -191,5 +191,17 @@ describe('writeGedcom: Quellen', () => {
 		expect(text).toContain('2 SOUR @S00001@\r\n3 PAGE Regel: Person älter 100 Jahre – Ist kein Tod bekannt, gilt als verstorben, wer vor über 100 Jahren geboren ist.; Geboren 1837\r\n3 QUAY 1');
 		expect(text).toContain('0 @S00237@ SOUR\r\n1 TITL Wolferstadt, Trauungen 12-01, 1851-1920\r\n1 _LINK https://data.matricula-online.eu/x/\r\n1 REPO @R0059@');
 		expect(text).toContain('0 @R0059@ REPO\r\n1 NAME Kirchenbücher Wolferstadt\r\n1 WWW https://data.matricula-online.eu/w/');
+	});
+});
+
+describe('Lange GEDCOM-Zeilen', () => {
+	it('teilt lange Werte mit CONC, ohne an Leerzeichen zu trennen', () => {
+		const value = 'Regel: Hofübernahme – ' + 'Bäuerin übernimmt den Hof '.repeat(20);
+		const out = line(3, 'PAGE', value).split('\r\n');
+		expect(out.length).toBeGreaterThan(1);
+		expect(out.every(l => new TextEncoder().encode(l).length <= 240)).toBe(true);
+		expect(out.slice(1).every(l => l.startsWith('4 CONC '))).toBe(true);
+		const joined = out[0]!.slice('3 PAGE '.length) + out.slice(1).map(l => l.slice('4 CONC '.length)).join('');
+		expect(joined).toBe(value);
 	});
 });

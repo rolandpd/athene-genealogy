@@ -144,7 +144,31 @@ export function marriedSurnames(p: VaultPerson): string[] {
 
 const gedcomToday = (d: Date) => `${d.getDate()} ${GEDCOM_MONTHS[d.getMonth()]} ${d.getFullYear()}`;
 const xrefOf = (id: string | undefined, fallback: string) => `@${(id ?? fallback).replace(/[^A-Za-z0-9]/g, '')}@`;
-const line = (level: number, tag: string, value?: string) => (value ? `${level} ${tag} ${value}` : `${level} ${tag}`);
+/**
+ * Eine GEDCOM-Zeile. Lange Werte werden mit CONC-Folgezeilen aufgeteilt, damit keine Zeile
+ * 255 Bytes überschreitet (UTF-8: Umlaute zählen doppelt). Geteilt wird nie an einem Leerzeichen,
+ * weil CONC-Teile ohne Trennzeichen aneinandergehängt werden.
+ */
+export const line = (level: number, tag: string, value?: string): string => {
+	if (!value) return `${level} ${tag}`;
+	const bytes = (s: string) => new TextEncoder().encode(s).length;
+	const MAX = 240;
+	const head = `${level} ${tag} `;
+	if (bytes(head + value) <= MAX) return head + value;
+	const parts: string[] = [];
+	let rest = value;
+	let prefix = head;
+	while (bytes(prefix + rest) > MAX) {
+		let cut = rest.length;
+		while (cut > 1 && bytes(prefix + rest.slice(0, cut)) > MAX) cut--;
+		while (cut > 1 && (rest[cut - 1] === ' ' || rest[cut] === ' ')) cut--;
+		parts.push(prefix + rest.slice(0, cut));
+		rest = rest.slice(cut);
+		prefix = `${level + 1} CONC `;
+	}
+	parts.push(prefix + rest);
+	return parts.join('\r\n');
+};
 /** Ereignisse, die per Datenschutz nicht veröffentlicht werden (Sensitiv, Privat) */
 const isHiddenEvent = (e: VaultEvent) => !!e.privacy && (/sensitiv/i.test(e.privacy) || isPrivate(e.privacy));
 
@@ -218,7 +242,7 @@ export function writeGedcom(r: CheckResult, opts: WriterOptions): WriterResult {
 				const page = isRule
 					? [`Regel: ${cit.title.replace(/\s*\(Regel\)\s*$/i, '')}${cit.description ? ` – ${cit.description}` : ''}`, e.note]
 					: [cit.title, cit.description];
-				out.push(line(level + 1, 'PAGE', clip(page.filter(Boolean).join('; '), 240)));
+				out.push(line(level + 1, 'PAGE', clip(page.filter(Boolean).join('; '), 1000)));
 				const date = dateLinkToGedcom(cit.date);
 				if (date && !isRule) out.push(line(level + 1, 'DATA'), line(level + 2, 'DATE', date));
 				if (cit.url) out.push(line(level + 1, '_LINK', cit.url));
