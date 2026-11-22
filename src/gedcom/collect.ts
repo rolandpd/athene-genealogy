@@ -36,7 +36,8 @@ export function collectVaultModel(app: App, exclude: Set<string> = new Set()): V
 		citations: new Map(), sources: new Map(), repositories: new Map(),
 	};
 	const firstAlias = (fm: FrontMatterCache, file: TFile) => asArray(fm['aliases']).map(String).find(a => a.trim() && !/^[A-Z]\d+$/.test(a.trim()))?.trim() ?? file.basename;
-	const firstUrl = (fm: FrontMatterCache) => asArray(fm['Url']).map(String).find(u => /^https?:/.test(u.trim()))?.trim();
+	const allUrls = (fm: FrontMatterCache) => asArray(fm['Url']).map(u => String(u).trim()).filter(u => /^https?:/.test(u));
+	const firstUrl = (fm: FrontMatterCache) => allUrls(fm)[0];
 	for (const file of app.vault.getMarkdownFiles()) {
 		if (exclude.has(file.path)) continue;
 		const fm = cache.getFileCache(file)?.frontmatter;
@@ -96,9 +97,14 @@ export function collectVaultModel(app: App, exclude: Set<string> = new Set()): V
 				path: file.path,
 				id: str(fm['id']),
 				title: firstAlias(fm, file),
+				name: linkText(fm['Titel']),
+				kind: linkText(fm['Art']),
+				page: linkText(fm['Seite']),
 				source: resolve(asArray(fm['Quelle'])[0], file),
 				description: linkText(fm['Beschreibung']),
+				note: linkText(fm['Anmerkung']),
 				url: firstUrl(fm),
+				urls: allUrls(fm),
 				date: str(fm['Datum']),
 			});
 		} else if (hasTag(tags, 'Quellen')) {
@@ -106,6 +112,8 @@ export function collectVaultModel(app: App, exclude: Set<string> = new Set()): V
 				path: file.path,
 				id: str(fm['id']),
 				title: linkText(fm['Titel']) ?? firstAlias(fm, file),
+				author: linkText(fm['Autor']),
+				publication: linkText(fm['Veröffentlichung']),
 				url: firstUrl(fm),
 				repository: resolve(asArray(fm['Repository'])[0], file),
 			});
@@ -113,7 +121,7 @@ export function collectVaultModel(app: App, exclude: Set<string> = new Set()): V
 			model.repositories!.set(file.path, {
 				path: file.path,
 				id: str(fm['id']),
-				name: firstAlias(fm, file).replace(/^@/, ''),
+				name: linkText(fm['Titel']) ?? firstAlias(fm, file).replace(/^@/, ''),
 				url: firstUrl(fm),
 			});
 		} else if (hasTag(tags, 'System/Ereignistyp') && str(fm['gedcom'])) {

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { runChecks } from './checks';
 import { readGedcomIndividuals } from './gedcomReader';
 import type { VaultEvent, VaultModel, VaultPerson } from './model';
-import { dateLinkToGedcom, line, marriedSurnames, nameParts, writeGedcom } from './writer';
+import { dateLinkToGedcom, imageLabel, line, marriedSurnames, nameParts, writeGedcom } from './writer';
 
 describe('dateLinkToGedcom', () => {
 	it.each([
@@ -161,36 +161,66 @@ describe('writeGedcom: Zuordnung über die Typ-Notizen', () => {
 	});
 });
 
+const lines = (...l: string[]) => l.join('\r\n');
+
 describe('writeGedcom: Quellen', () => {
 	const p = 'Bayrle, Joseph I0453.md';
 	const model: VaultModel = {
 		persons: new Map([[p, { path: p, basename: 'Bayrle, Joseph I0453', id: 'I0453', kekule: true, xrefs: [], sex: 'M' }]]),
 		events: [
-			{ path: 'E1', basename: 'E1', type: 'Geburt', persons: [p], date: '[[1837-03-08|08.03.1837]]', evidence: ['C1'], confidence: 'Gesichert' },
-			{ path: 'E2', basename: 'E2', type: 'Tod', persons: [p], evidence: ['C2'], confidence: 'Abgeleitet', note: 'Geboren 1837' },
+			{ path: 'E1', basename: 'E1', type: 'Geburt', persons: [p], date: '[[1837-03-08|08.03.1837]]', evidence: ['C1', 'C3', 'S2'], confidence: 'Gesichert' },
+			{ path: 'E2', basename: 'E2', type: 'Tod', persons: [p], evidence: ['C2'], confidence: 'Abgeleitet', note: 'Geboren 1837.' },
 		],
 		families: [],
 		places: new Map(),
 		citations: new Map([
-			['C1', { path: 'C1', id: 'C00058', title: 'Joseph Bayrle u. Barbara Gumpp 27.11.1866 (Heiratseintrag)', source: 'S1', description: 'S.28', url: 'https://data.matricula-online.eu/x/?pg=28', date: '[[1866-11-27|27.11.1866]]' }],
-			['C2', { path: 'C2', id: 'C00010', title: 'Person älter 100 Jahre (Regel)', source: 'S0', description: 'Ist kein Tod bekannt, gilt als verstorben, wer vor über 100 Jahren geboren ist.' }],
+			['C1', {
+				path: 'C1', id: 'C00058', title: 'Joseph Bayrle u. Barbara Gumpp 27.11.1866 (Heiratseintrag)', name: 'Joseph Bayrle u. Barbara Gumpp', kind: 'Heiratseintrag',
+				source: 'S1', note: 'Datum sieht aus wie 27. Aug.', url: 'https://data.matricula-online.eu/x/?pg=28',
+				urls: ['https://data.matricula-online.eu/x/?pg=28', 'https://data.matricula-online.eu/x/?pg=29'], date: '[[1866-11-27|27.11.1866]]',
+			}],
+			['C2', { path: 'C2', id: 'C00010', title: 'Person älter 100 Jahre (Regel)', name: 'Person älter 100 Jahre', kind: 'Regel', source: 'S0', description: 'Ist kein Tod bekannt, gilt als verstorben, wer vor über 100 Jahren geboren ist.' }],
+			['C3', { path: 'C3', id: 'C00999', title: 'Adam Mayr No.1 (Familienbuch)', kind: 'Familienbuch', source: 'S1', page: 'S. 3' }],
 		]),
 		sources: new Map([
-			['S1', { path: 'S1', id: 'S00237', title: 'Wolferstadt, Trauungen 12-01, 1851-1920', url: 'https://data.matricula-online.eu/x/', repository: 'R1' }],
+			['S1', { path: 'S1', id: 'S00237', title: 'Wolferstadt, Trauungen 12-01, 1851-1920', author: 'Katholische Pfarrei Wolferstadt', url: 'https://data.matricula-online.eu/x/', repository: 'R1' }],
 			['S0', { path: 'S0', id: 'S00001', title: 'Basisregelwerk' }],
+			['S2', { path: 'S2', id: 'S00300', title: 'Leben in Westendorf', author: 'Pöllmann, Christa', publication: 'Augsburg 2021', url: 'https://example.org/buch' }],
 		]),
 		repositories: new Map([['R1', { path: 'R1', id: 'R0059', name: 'Kirchenbücher Wolferstadt', url: 'https://data.matricula-online.eu/w/' }]]),
 	};
 	const { text } = writeGedcom(runChecks(model, { currentYear: 2026, livingYears: 100 }), { created: new Date(2026, 10, 19), version: 'test' });
 
-	it('schreibt Quellenangaben mit Seite, Link und Verlässlichkeit', () => {
-		expect(text).toContain('1 BIRT\r\n2 DATE 8 MAR 1837\r\n2 SOUR @S00237@\r\n3 PAGE Joseph Bayrle u. Barbara Gumpp 27.11.1866 (Heiratseintrag); S.28\r\n3 DATA\r\n4 DATE 27 NOV 1866\r\n3 _LINK https://data.matricula-online.eu/x/?pg=28\r\n3 QUAY 2');
+	it('setzt PAGE aus Art, Titel, Datum, Seite und Bildnummern zusammen', () => {
+		expect(text).toContain(lines('1 BIRT', '2 DATE 8 MAR 1837', '2 SOUR @S00237@',
+			'3 PAGE Heiratseintrag: Joseph Bayrle u. Barbara Gumpp, 27.11.1866, Bild 28–29',
+			'3 DATA', '4 DATE 27 NOV 1866', '4 TEXT Datum sieht aus wie 27. Aug.',
+			'3 _LINK https://data.matricula-online.eu/x/?pg=28', '3 QUAY 2'));
 	});
 
-	it('schreibt Regeln mit Begründung und die Quellen- und Archiv-Datensätze', () => {
-		expect(text).toContain('2 SOUR @S00001@\r\n3 PAGE Regel: Person älter 100 Jahre – Ist kein Tod bekannt, gilt als verstorben, wer vor über 100 Jahren geboren ist.; Geboren 1837\r\n3 QUAY 1');
-		expect(text).toContain('0 @S00237@ SOUR\r\n1 TITL Wolferstadt, Trauungen 12-01, 1851-1920\r\n1 _LINK https://data.matricula-online.eu/x/\r\n1 REPO @R0059@');
-		expect(text).toContain('0 @R0059@ REPO\r\n1 NAME Kirchenbücher Wolferstadt\r\n1 WWW https://data.matricula-online.eu/w/');
+	it('nimmt ohne Titel den Alias und den Link der Quelle', () => {
+		expect(text).toContain(lines('2 SOUR @S00237@', '3 PAGE Adam Mayr No.1 (Familienbuch), S. 3', '3 _LINK https://data.matricula-online.eu/x/', '3 QUAY 2'));
+		expect(text).toContain(lines('2 SOUR @S00300@', '3 _LINK https://example.org/buch', '3 QUAY 2'));
+	});
+
+	it('schreibt Regeln kurz und die Erklärung in DATA.TEXT', () => {
+		expect(text).toContain(lines('2 SOUR @S00001@', '3 PAGE Regel: Person älter 100 Jahre', '3 DATA',
+			'4 TEXT Ist kein Tod bekannt, gilt als verstorben, wer vor über 100 Jahren geboren ist. Geboren 1837.', '3 QUAY 1'));
+	});
+
+	it('schreibt Quellen mit AUTH und PUBL, ohne eigenen Link', () => {
+		expect(text).toContain(lines('0 @S00237@ SOUR', '1 AUTH Katholische Pfarrei Wolferstadt', '1 TITL Wolferstadt, Trauungen 12-01, 1851-1920', '1 REPO @R0059@'));
+		expect(text).toContain(lines('0 @S00300@ SOUR', '1 AUTH Pöllmann, Christa', '1 TITL Leben in Westendorf', '1 PUBL Augsburg 2021', ''));
+		expect(text).toContain(lines('0 @R0059@ REPO', '1 NAME Kirchenbücher Wolferstadt', '1 WWW https://data.matricula-online.eu/w/'));
+	});
+});
+
+describe('imageLabel', () => {
+	it('liest Bildnummern aus den Urls', () => {
+		expect(imageLabel(['https://x/?pg=28'])).toBe('Bild 28');
+		expect(imageLabel(['https://x/?pg=29', 'https://x/?pg=28'])).toBe('Bild 28–29');
+		expect(imageLabel(['https://x/?pg=28', 'https://x/?pg=31'])).toBe('Bild 28, 31');
+		expect(imageLabel(['https://x/'])).toBeUndefined();
 	});
 });
 

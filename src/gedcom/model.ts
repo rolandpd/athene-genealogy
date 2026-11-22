@@ -82,13 +82,24 @@ export interface VaultPlace {
 export interface VaultCitation {
 	path: string;
 	id?: string;
-	/** Bezeichnung (erster Alias), z. B. "Johannes Ev. Mayr ≈17.08.1869 (Taufeintrag)" */
+	/** Bezeichnung (erster Alias), z. B. "Johannes Ev. Mayr ≈17.08.1869 (Taufeintrag)" – Rückfall, wenn `name` fehlt */
 	title: string;
+	/** `Titel`: nur die Namen, z. B. "Joseph Bayrle u. Barbara Gumpp" */
+	name?: string;
+	/** `Art`, z. B. "Heiratseintrag", "Regel" */
+	kind?: string;
+	/** `Seite`: Seite oder Nummer im Buch, z. B. "S. 12, Nr. 4" */
+	page?: string;
 	/** Pfad der Quelle */
 	source?: string;
-	/** `Beschreibung`, z. B. Seite "S.58" */
+	/** `Beschreibung`: veröffentlichbarer Satz, z. B. die Erklärung einer Regel */
 	description?: string;
+	/** `Anmerkung` der Fundstelle */
+	note?: string;
+	/** erste `Url` */
 	url?: string;
+	/** alle `Url`-Werte (für die Bildnummern) */
+	urls?: string[];
 	/** Datum der Fundstelle (Datumslink) */
 	date?: string;
 }
@@ -98,6 +109,10 @@ export interface VaultSource {
 	path: string;
 	id?: string;
 	title: string;
+	/** `Autor` → AUTH */
+	author?: string;
+	/** `Veröffentlichung` → PUBL */
+	publication?: string;
 	url?: string;
 	/** Pfad des (ersten) Aufbewahrungsorts */
 	repository?: string;

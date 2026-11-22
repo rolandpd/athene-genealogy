@@ -1,6 +1,6 @@
 import { AtheneDate } from '../date/AtheneDate';
 import { type CheckResult, isPrivate, pairKey } from './checks';
-import { type EventTypeDef, type VaultEvent, type VaultPerson, parseWikilink } from './model';
+import { type EventTypeDef, type VaultCitation, type VaultEvent, type VaultPerson, linkText, parseWikilink } from './model';
 
 /**
  * GEDCOM 5.5.1-Export für GEDBAS.
@@ -112,6 +112,31 @@ export function dateLinkToEdtf(raw: string | undefined): string | undefined {
 		if (a && b) return `${a}${q}/${b}${q}`;
 	}
 	return `${target}${q}`;
+}
+
+/** Bildnummern aus den Urls einer Fundstelle (`?pg=28`): "Bild 28", "Bild 28–29", "Bild 28, 31". */
+export function imageLabel(urls: string[] | undefined): string | undefined {
+	const nums = [...new Set((urls ?? []).map(u => u.match(/[?&]pg=(\d+)/)?.[1]).filter((n): n is string => !!n).map(Number))].sort((a, b) => a - b);
+	if (!nums.length) return undefined;
+	const consecutive = nums.every((n, i) => i === 0 || n === nums[i - 1]! + 1);
+	return `Bild ${consecutive && nums.length > 1 ? `${nums[0]}–${nums[nums.length - 1]}` : nums.join(', ')}`;
+}
+
+/**
+ * `PAGE` einer Quellenangabe: "<Art>: <Titel>, <Datum>, <Seite>, Bild <n>".
+ * Ohne `Titel` gilt der Alias (der Art und Datum meist schon enthält), ergänzt um Seite und Bild.
+ */
+export function citationPage(cit: VaultCitation): string {
+	const head = cit.name
+		? [cit.kind ? `${cit.kind}: ${cit.name}` : cit.name, linkText(cit.date)]
+		: [cit.title];
+	return [...head, cit.page, imageLabel(cit.urls)].filter(Boolean).join(', ');
+}
+
+/** `DATA.TEXT` einer Quellenangabe: Beschreibung, Anmerkung der Fundstelle, Anmerkung des Ereignisses. */
+export function citationText(cit: VaultCitation | undefined, eventNote: string | undefined): string | undefined {
+	const parts = [cit?.description, cit?.note, eventNote].map(s => s?.trim()).filter((s): s is string => !!s);
+	return parts.length ? parts.join(' ') : undefined;
 }
 
 /** Datumslink → GEDCOM 5.5.1, z. B. "ABT 1774", "BEF 10 OCT 1774". */
@@ -235,18 +260,18 @@ export function writeGedcom(r: CheckResult, opts: WriterOptions): WriterResult {
 			if (!sourcePath || !model.sources?.has(sourcePath)) continue;
 			usedSources.add(sourcePath);
 			out.push(line(level, 'SOUR', sourceXref(sourcePath)));
-			if (cit) {
-				// Seitenangabe: Bezeichnung der Fundstelle, dazu Beschreibung (Seite) bzw. bei Regeln die Anmerkung des Ereignisses
-				const isRule = /regel/i.test(cit.title) || model.sources.get(sourcePath)?.title === 'Basisregelwerk';
-				// Regel: "Regel: Hofübernahme – <Beschreibung der Regel>; <Anmerkung des Ereignisses>"
-				const page = isRule
-					? [`Regel: ${cit.title.replace(/\s*\(Regel\)\s*$/i, '')}${cit.description ? ` – ${cit.description}` : ''}`, e.note]
-					: [cit.title, cit.description];
-				out.push(line(level + 1, 'PAGE', clip(page.filter(Boolean).join('; '), 1000)));
-				const date = dateLinkToGedcom(cit.date);
-				if (date && !isRule) out.push(line(level + 1, 'DATA'), line(level + 2, 'DATE', date));
-				if (cit.url) out.push(line(level + 1, '_LINK', cit.url));
+			// Zusammensetzung siehe "Athene - GEDCOM-Quellen": PAGE kurz, Erklärungen in DATA.TEXT (GEDBAS zeigt NOTE nicht an)
+			if (cit) out.push(line(level + 1, 'PAGE', clip(citationPage(cit), 1000)));
+			const date = cit ? dateLinkToGedcom(cit.date) : undefined;
+			const text = clip(citationText(cit, e.note), 4000);
+			if (date || text) {
+				out.push(line(level + 1, 'DATA'));
+				if (date) out.push(line(level + 2, 'DATE', date));
+				if (text) out.push(line(level + 2, 'TEXT', text));
 			}
+			// genau ein Link: der der Fundstelle, sonst der der Quelle
+			const link = cit?.url ?? model.sources.get(sourcePath)?.url;
+			if (link) out.push(line(level + 1, '_LINK', link));
 			if (quay) out.push(line(level + 1, 'QUAY', quay));
 		}
 		return out;
@@ -428,8 +453,10 @@ export function writeGedcom(r: CheckResult, opts: WriterOptions): WriterResult {
 	const usedRepos = new Set<string>();
 	for (const path of [...usedSources].sort((a, b) => sourceXref(a).localeCompare(sourceXref(b)))) {
 		const s = model.sources!.get(path)!;
-		out.push(`0 ${sourceXref(path)} SOUR`, line(1, 'TITL', clip(s.title, 240)));
-		if (s.url) out.push(line(1, '_LINK', s.url));
+		out.push(`0 ${sourceXref(path)} SOUR`);
+		if (s.author) out.push(line(1, 'AUTH', clip(s.author, 240)));
+		out.push(line(1, 'TITL', clip(s.title, 240)));
+		if (s.publication) out.push(line(1, 'PUBL', clip(s.publication, 240)));
 		const repo = s.repository ? model.repositories?.get(s.repository) : undefined;
 		if (repo) {
 			usedRepos.add(repo.path);
