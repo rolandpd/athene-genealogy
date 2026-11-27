@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { runChecks } from './checks';
 import { readGedcomIndividuals } from './gedcomReader';
 import type { VaultEvent, VaultModel, VaultPerson } from './model';
-import { dateLinkToGedcom, imageLabel, line, marriedSurnames, nameParts, writeGedcom } from './writer';
+import { citationPage, dateLinkToGedcom, line, marriedSurnames, nameParts, writeGedcom } from './writer';
 
 describe('dateLinkToGedcom', () => {
 	it.each([
@@ -175,12 +175,12 @@ describe('writeGedcom: Quellen', () => {
 		places: new Map(),
 		citations: new Map([
 			['C1', {
-				path: 'C1', id: 'C00058', title: 'Joseph Bayrle u. Barbara Gumpp 27.11.1866 (Heiratseintrag)', name: 'Joseph Bayrle u. Barbara Gumpp', kind: 'Heiratseintrag',
+				path: 'C1', id: 'C00058', title: 'Heiratseintrag Joseph Bayrle u. Barbara Gumpp 27 NOV 1866', locator: 'S. 12, Nr. 4',
 				source: 'S1', note: 'Datum sieht aus wie 27. Aug.', url: 'https://data.matricula-online.eu/x/?pg=28',
 				urls: ['https://data.matricula-online.eu/x/?pg=28', 'https://data.matricula-online.eu/x/?pg=29'], date: '[[1866-11-27|27.11.1866]]',
 			}],
-			['C2', { path: 'C2', id: 'C00010', title: 'Person älter 100 Jahre (Regel)', name: 'Person älter 100 Jahre', kind: 'Regel', source: 'S0', description: 'Ist kein Tod bekannt, gilt als verstorben, wer vor über 100 Jahren geboren ist.' }],
-			['C3', { path: 'C3', id: 'C00999', title: 'Adam Mayr No.1 (Familienbuch)', kind: 'Familienbuch', source: 'S1', page: 'S. 3' }],
+			['C2', { path: 'C2', id: 'C00010', title: 'Person älter 100 Jahre (Regel)', source: 'S0', description: 'Ist kein Tod bekannt, gilt als verstorben, wer vor über 100 Jahren geboren ist.' }],
+			['C3', { path: 'C3', id: 'C00999', source: 'S1', locator: 'S. 3' }],
 		]),
 		sources: new Map([
 			['S1', { path: 'S1', id: 'S00237', title: 'Wolferstadt, Trauungen 12-01, 1851-1920', author: 'Katholische Pfarrei Wolferstadt', url: 'https://data.matricula-online.eu/x/', repository: 'R1' }],
@@ -191,36 +191,32 @@ describe('writeGedcom: Quellen', () => {
 	};
 	const { text } = writeGedcom(runChecks(model, { currentYear: 2026, livingYears: 100 }), { created: new Date(2026, 10, 19), version: 'test' });
 
-	it('setzt PAGE aus Art, Titel, Datum, Seite und Bildnummern zusammen', () => {
+	it('setzt PAGE aus erstem Alias und Stelle zusammen', () => {
 		expect(text).toContain(lines('1 BIRT', '2 DATE 8 MAR 1837', '2 SOUR @S00237@',
-			'3 PAGE Heiratseintrag: Joseph Bayrle u. Barbara Gumpp, 27.11.1866, Bild 28–29',
+			'3 PAGE Heiratseintrag Joseph Bayrle u. Barbara Gumpp 27 NOV 1866, S. 12, Nr. 4',
 			'3 DATA', '4 DATE 27 NOV 1866', '4 TEXT Datum sieht aus wie 27. Aug.',
 			'3 _LINK https://data.matricula-online.eu/x/?pg=28', '3 QUAY 2'));
 	});
 
-	it('nimmt ohne Titel den Alias und den Link der Quelle', () => {
-		expect(text).toContain(lines('2 SOUR @S00237@', '3 PAGE Adam Mayr No.1 (Familienbuch), S. 3', '3 _LINK https://data.matricula-online.eu/x/', '3 QUAY 2'));
+	it('nimmt ohne Alias nur die Stelle und den Link der Quelle', () => {
+		expect(text).toContain(lines('2 SOUR @S00237@', '3 PAGE S. 3', '3 _LINK https://data.matricula-online.eu/x/', '3 QUAY 2'));
 		expect(text).toContain(lines('2 SOUR @S00300@', '3 _LINK https://example.org/buch', '3 QUAY 2'));
 	});
 
 	it('schreibt Regeln kurz und die Erklärung in DATA.TEXT', () => {
-		expect(text).toContain(lines('2 SOUR @S00001@', '3 PAGE Regel: Person älter 100 Jahre', '3 DATA',
+		expect(text).toContain(lines('2 SOUR @S00001@', '3 PAGE Person älter 100 Jahre (Regel)', '3 DATA',
 			'4 TEXT Ist kein Tod bekannt, gilt als verstorben, wer vor über 100 Jahren geboren ist. Geboren 1837.', '3 QUAY 1'));
+	});
+
+	it('lässt PAGE weg, wenn weder Alias noch Stelle da sind', () => {
+		expect(citationPage({ path: 'C9' })).toBe('');
+		expect(citationPage({ path: 'C9', locator: 'Bd. 3, S. 39' })).toBe('Bd. 3, S. 39');
 	});
 
 	it('schreibt Quellen mit AUTH und PUBL, ohne eigenen Link', () => {
 		expect(text).toContain(lines('0 @S00237@ SOUR', '1 AUTH Katholische Pfarrei Wolferstadt', '1 TITL Wolferstadt, Trauungen 12-01, 1851-1920', '1 REPO @R0059@'));
 		expect(text).toContain(lines('0 @S00300@ SOUR', '1 AUTH Pöllmann, Christa', '1 TITL Leben in Westendorf', '1 PUBL Augsburg 2021', ''));
 		expect(text).toContain(lines('0 @R0059@ REPO', '1 NAME Kirchenbücher Wolferstadt', '1 WWW https://data.matricula-online.eu/w/'));
-	});
-});
-
-describe('imageLabel', () => {
-	it('liest Bildnummern aus den Urls', () => {
-		expect(imageLabel(['https://x/?pg=28'])).toBe('Bild 28');
-		expect(imageLabel(['https://x/?pg=29', 'https://x/?pg=28'])).toBe('Bild 28–29');
-		expect(imageLabel(['https://x/?pg=28', 'https://x/?pg=31'])).toBe('Bild 28, 31');
-		expect(imageLabel(['https://x/'])).toBeUndefined();
 	});
 });
 

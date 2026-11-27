@@ -96,10 +96,8 @@ export function collectVaultModel(app: App, exclude: Set<string> = new Set()): V
 			model.citations!.set(file.path, {
 				path: file.path,
 				id: str(fm['id']),
-				title: firstAlias(fm, file),
-				name: linkText(fm['Titel']),
-				kind: linkText(fm['Art']),
-				page: linkText(fm['Seite']),
+				title: linkText(asArray(fm['aliases'])[0]),
+				locator: linkText(fm['Position']),
 				source: resolve(asArray(fm['Quelle'])[0], file),
 				description: linkText(fm['Beschreibung']),
 				note: linkText(fm['Anmerkung']),

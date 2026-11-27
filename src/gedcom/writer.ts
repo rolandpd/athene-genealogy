@@ -114,23 +114,12 @@ export function dateLinkToEdtf(raw: string | undefined): string | undefined {
 	return `${target}${q}`;
 }
 
-/** Bildnummern aus den Urls einer Fundstelle (`?pg=28`): "Bild 28", "Bild 28–29", "Bild 28, 31". */
-export function imageLabel(urls: string[] | undefined): string | undefined {
-	const nums = [...new Set((urls ?? []).map(u => u.match(/[?&]pg=(\d+)/)?.[1]).filter((n): n is string => !!n).map(Number))].sort((a, b) => a - b);
-	if (!nums.length) return undefined;
-	const consecutive = nums.every((n, i) => i === 0 || n === nums[i - 1]! + 1);
-	return `Bild ${consecutive && nums.length > 1 ? `${nums[0]}–${nums[nums.length - 1]}` : nums.join(', ')}`;
-}
-
 /**
- * `PAGE` einer Quellenangabe: "<Art>: <Titel>, <Datum>, <Seite>, Bild <n>".
- * Ohne `Titel` gilt der Alias (der Art und Datum meist schon enthält), ergänzt um Seite und Bild.
+ * `PAGE` einer Quellenangabe: "<erster Alias>, <Position>" – wie die Formel PAGE in System/GEDCOM-Export.base.
+ * Beides ist optional; fehlt beides, gibt es kein PAGE und die Quelle wird ohne Position zitiert.
  */
 export function citationPage(cit: VaultCitation): string {
-	const head = cit.name
-		? [cit.kind ? `${cit.kind}: ${cit.name}` : cit.name, linkText(cit.date)]
-		: [cit.title];
-	return [...head, cit.page, imageLabel(cit.urls)].filter(Boolean).join(', ');
+	return [cit.title, cit.locator].filter(Boolean).join(', ');
 }
 
 /** `DATA.TEXT` einer Quellenangabe: Beschreibung, Anmerkung der Fundstelle, Anmerkung des Ereignisses. */
@@ -261,7 +250,8 @@ export function writeGedcom(r: CheckResult, opts: WriterOptions): WriterResult {
 			usedSources.add(sourcePath);
 			out.push(line(level, 'SOUR', sourceXref(sourcePath)));
 			// Zusammensetzung siehe "Athene - GEDCOM-Quellen": PAGE kurz, Erklärungen in DATA.TEXT (GEDBAS zeigt NOTE nicht an)
-			if (cit) out.push(line(level + 1, 'PAGE', clip(citationPage(cit), 1000)));
+			const page = cit ? citationPage(cit) : '';
+			if (page) out.push(line(level + 1, 'PAGE', clip(page, 1000)));
 			const date = cit ? dateLinkToGedcom(cit.date) : undefined;
 			const text = clip(citationText(cit, e.note), 4000);
 			if (date || text) {
